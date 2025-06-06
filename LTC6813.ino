@@ -306,6 +306,7 @@ void loop() {
             voltage_buffer[int(n/volt_interval)][i][j] = cell_voltage[i][j];
           }
         }
+        update_SOC();
       }
       if(n%temp_interval == 0){
         Serial.println("New Temp");
@@ -1018,7 +1019,7 @@ void charger_enable(bool enable){
 
 void TX_CAN(){
   measure_voltage();
-  measure_temp();
+      measure_temp();
   float min_cell_voltage = cell_voltage[0][0];
   float max_cell_voltage = cell_voltage[0][0];
   float min_cell_temp = cell_temp[0][0];
