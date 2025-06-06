@@ -112,7 +112,7 @@ void setup() {
   pinMode(CTX3, OUTPUT);
   pinMode(STBY, OUTPUT);
   can.begin();
-  can.setBaudRate(250000);
+  can.setBaudRate(500000);
   can.setMaxMB(3);        //number of CAN message mailboxes
   digitalWrite(STBY, LOW);
   //    https://github.com/tonton81/FlexCAN_T4/blob/master/examples/mailbox_filtering_example_with_interrupts/mailbox_filtering_example_with_interrupts.ino
@@ -1017,10 +1017,14 @@ void charger_enable(bool enable){
 }
 
 void TX_CAN(){
-  float min_cell_voltage = cell_voltage[0][0];      //funct. min_max requires that the min and max values are initalized within the range of the min max values
+  measure_voltage();
+  measure_temp();
+  float min_cell_voltage = cell_voltage[0][0];
   float max_cell_voltage = cell_voltage[0][0];
   float min_cell_temp = cell_temp[0][0];
   float max_cell_temp = cell_temp[0][0];
+  float min_die_temp = die_temps[0];
+  float max_die_temp = die_temps[0];
   min_max<num_boards,num_cells>(cell_voltage, &min_cell_voltage, &max_cell_voltage);
   min_max<num_boards,9>(cell_temp, &min_cell_temp, &max_cell_temp);
   uint8_t inst_power_limit = power_limit(max_cell_temp);
@@ -1033,8 +1037,8 @@ void TX_CAN(){
   CAN_message_t BMS_data;
   //BMS_data.id = BMS_ID; b
   //BMS_data.id = BMS_ID;
-  BMS_data.id = 0x1806E5F5;
-  BMS_data.flags.extended = 1; 
+  BMS_data.id = 0x00000007;
+  BMS_data.flags.extended = 0; 
   BMS_data.len = 8;     // Set the data length
 
   BMS_data.buf[0] = float_2_uint8_t(soc, 0, 100);               //SOC
@@ -1042,8 +1046,8 @@ void TX_CAN(){
   BMS_data.buf[2] = float_2_uint8_t(max_cell_voltage, 0, 5);    //max cell
   BMS_data.buf[3] = float_2_uint8_t(max_cell_temp, 0, 150);     // max cell temp
   BMS_data.buf[4] = float_2_uint8_t(min_cell_voltage, 0, 5);    // min cell voltage
-  BMS_data.buf[5] = float_2_uint8_t(min_cell_temp, 0, 150);     // min cell temp
-  BMS_data.buf[6] = inst_power_limit;                           // BMS Suggested Power Limit
+  BMS_data.buf[5] = float_2_uint8_t(max_cell_temp, 0, 150);     // min cell temp
+  BMS_data.buf[6] = inst_power_limit ;                           // BMS Suggested Power Limit
   BMS_data.buf[7] = 0;
 
   if(can.write(BMS_data)){
