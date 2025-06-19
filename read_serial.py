@@ -1,8 +1,3 @@
-import matplotlib.pyplot as plt
-import matplotlib.animation as animation
-from matplotlib import style
-import numpy as np
-import random
 import serial
 import serial.tools.list_ports
 import time
@@ -11,11 +6,11 @@ import time
 
 ser = serial.Serial()
 ports = serial.tools.list_ports.comports()
-port_num = 6
+port_num = 13
 ser.port = f'COM{port_num}' #Arduino serial port  - try statement to find proper serial port
 #ser.baudrate = 100000
 ser.baudrate = 9600
-ser.timeout = 1 #specify timeout when using readline() in ms
+ser.timeout = 1000 #specify timeout when using readline() in ms
 ser.open()
 
 def read_line():
@@ -25,7 +20,7 @@ def read_line():
             byte = ser.read()         # Read one byte
             char = byte.decode('utf-8', errors='ignore')  # Convert byte to string
             if char == '\n':
-                #print(line)
+                print(line)
                 return line.strip()   # Remove trailing spaces/newlines
             else:
                 line += char
@@ -56,13 +51,3 @@ if ser.is_open==True:
            
             file.close()
             ser.write(b"next file\n")
-
-
-
-
-
-
-# while(line.strip() != "done"):
-#                 line = ser.readline().decode('utf-8')
-#                 file.write(line)
-#                 print(line)

@@ -13,7 +13,7 @@ const float min_temp = 0;
 const float OV = 4.19;       //over-voltage limit (spelled with an "oh" not zero) (V)
 const float UV = 2.5;       //under-voltage limit (V)
 const float max_diff = 1.7;   //max difference between min and max cell for open parallel cell detection
-const int watchdog_timeout = 0;  //watchdog timeout (in seconds). setting to 0 will DISABLE timer. 
+const int watchdog_timeout = 10;  //watchdog timeout (in seconds). setting to 0 will DISABLE timer. 
 
 //architecture
 const int num_boards = 5;
@@ -29,8 +29,8 @@ uint32_t INV_TX_ID = 0x0A7;         //CAN Message ID of message send from invert
 uint32_t CHG_TX_ID = 0x18FF50E5;    //CAN Message ID of messages sent from charger
 
 //charging parameters
-uint16_t CHG_voltage = 357;
-uint16_t CHG_current = 8;
+uint16_t CHG_voltage = 380;
+uint16_t CHG_current = 0.2;
 float _qt = 12.6 * 60; //total capacity (coulumbs): total capacity (Ah) * 60s/1hr
 
 //balancing parameters
@@ -45,14 +45,14 @@ int ADC_mode = 0;     //integer 0-7 to set ADC sampling frequency
 
 const int time_step = 10;      //timestep in milliseconds
 const int volt_interval = 5;
-const int temp_interval = 5;
-const int current_interval = 18;
+const int temp_interval = 10;
+const int current_interval = 1;
 const int CAN_interval = 100;
 const int SD_interval = 10;           //This needs to be the longest interval
 
 //SD Card
-float SD_card_size = 32;   //SD card size in Gb
-int file_read_begin = 306;  //Starting file number of file to dump through serial
+float SD_card_size = 16;   //SD card size in Gb
+int file_read_begin = 0;  //Starting file number of file to dump through serial
 
 
 //Power Calculations

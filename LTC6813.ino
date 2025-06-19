@@ -91,7 +91,7 @@ void setup() {
   pinMode(20, OUTPUT);
   digitalWrite(20, LOW);
 
-  delay(5000);  //delay upon startup should be use to make it easier to recover the teensy when runtime errors occurs
+  delay(5000);  //startup delay should be use to make it easier to recover the teensy when runtime errors occurs
 
   //start timers
   sense_watchdog_timer = start_time - 5000;  //initial sense_watchdog timer with expired watchdog time (T - 2000 milliseconds)
@@ -141,7 +141,7 @@ void setup() {
     config.timeout = watchdog_timeout; /* in seconds, 0->128 */  //time until watchdog reset
     config.pin = 20;                                             //pin to be driven low upon reset. WDT1 holds low, WDT2 pulses low
     config.callback = myCallback;
-    wdt.begin(config);  //This needs moved to the main loop
+    wdt.begin(config);
   }
 
   //Bring up ADC
@@ -158,30 +158,43 @@ void setup() {
 
   //voltage poll and temperature poll take 16 and 24 milliseconds. The rest of the measure functions only take 1 or two milliseconds
 
-  //flash_leds();
 
   if (mode == "") {
     measure_voltage();
     measure_current();
     update_SOC();
+
     CAN_message_t msg;
+    bool CAN_baud_alt = true;
     while (1) {
       Serial.println("Setup");
       measure_current();
       measure_voltage();
       measure_temp();
-      update_SOC();
       print_min_max();
       reset_watchdog();
       msg = RX_CAN();
+
+      //Alternate CAN baud rate (250000 for charger, 500000 for vehicle)
+      if(CAN_baud_alt){
+        can.setBaudRate(500000);
+        CAN_baud_alt = false;
+      }
+      else{
+        can.setBaudRate(250000);
+        CAN_baud_alt = true;
+      }
+      
       String input = Serial.readStringUntil('\n');
       input.trim();
       if (msg.id == INV_TX_ID) {  //Always check msg id
         mode = "standy";
+        can.setBaudRate(500000);
         //can.setMBFilter(MB1, 0);  //Disable Charger Mailbox
         break;
       } else if (msg.id == CHG_TX_ID) {
         mode = "charge";
+        can.setBaudRate(250000);
         //can.setMBFilter(MB0, 0);  //Disable Inverter Mailbox
         break;
       } else if (current >= 0.5) {
@@ -218,14 +231,16 @@ void loop() {
       charger_current = ((uint16_t)msg.buf[2] << 8 | (uint16_t)msg.buf[3]) / 10;
       Serial.println(charger_voltage);
       Serial.println(pack_voltage);
-      if (msg.id == CHG_TX_ID && msg.buf[4] == 0 && charger_voltage >= pack_voltage * 0.80) {  //if can id matches charger and there are no charger faults AND precharge is complete
+      if (msg.id == CHG_TX_ID && msg.buf[4] == 0 || true){ //&& charger_voltage >= pack_voltage * 0.80) {  //if can id matches charger AND there are no charger faults AND precharge is complete
         break;
       }
     }
     //00100 low ac power on charger flag
-    delay(1000);  //delay so that another Charger CAN message is sent to the BMS (so that an empty CAN buffer is not read which would raise a charger error)
+    delay(1000);  //delay so that another Charger CAN message is sent to the BMS (so that an empty CAN buffer is not read which would indicate a charger error)
 
+    unsigned int charge_start_time = millis();
     while (1) {  //charge cycle
+      Serial.print("Time (minutes): "); Serial.println((float)(millis() - charge_start_time)/60000);
       Serial.print("charge fault status: ");
       Serial.println(charger_fault);
       measure_voltage();
@@ -235,6 +250,7 @@ void loop() {
       Serial.println(current);
       Serial.print("Pack Voltage: ");
       Serial.println(pack_voltage);
+      print_min_max();
       if (!memory_fault) {
         SD_data_write();
       }
@@ -314,7 +330,6 @@ void loop() {
             voltage_buffer[int(n / volt_interval)][i][j] = cell_voltage[i][j];
           }
         }
-        update_SOC();
       }
       if (n % temp_interval == 0) {
         Serial.println("New Temp");
@@ -327,7 +342,6 @@ void loop() {
       }
       if (new_voltage && new_temp) {
         print_min_max();
-        Serial.println("Reset_watchdog");
         reset_watchdog();
       }
       if (n % SD_interval == 0 && !memory_fault) {
@@ -335,8 +349,8 @@ void loop() {
       }
       if (n % CAN_interval == 0) {
         Serial.println("Send CAN");
+        update_SOC();
         TX_CAN();
-        //charger_enable(false);
       }
 
       // msg = RX_CAN();
@@ -608,16 +622,18 @@ void map_text2var(String name, String value) {  //map text name and value to a v
   }
 }
 
-float update_SOC() {
-  const int discharge_curve_length = sizeof(discharge_points) / sizeof(discharge_points[0]);  //length of each discharge curve
-  const float max_capacity = discharge_points[0];                                             //maximum capacity of a single cell
-  const int num_current_curves = sizeof(discharge_currents) / sizeof(discharge_currents[0]);  //number of discharge curves @ different currents
+float update_SOC() { 
 
-  float min_OC_cell_voltage = open_circuit_voltage[0][0];  //funct. min_max requires that the min and max values are initalized within the range of the min max values
-  float max_OC_cell_voltage = open_circuit_voltage[0][0];
-  min_max<num_boards, num_cells>(open_circuit_voltage, &min_OC_cell_voltage, &max_OC_cell_voltage);
-  float discharged = interpolate<discharge_curve_length>(discharge_curves[0], discharge_points, min_OC_cell_voltage);  //capacity which has already been discharged (mAh)
-  soc = 100 - ((max_capacity - discharged) / max_capacity * 100);
+    const int discharge_curve_length = sizeof(discharge_points) / sizeof(discharge_points[0]);  //length of each discharge curve
+    const float max_capacity = discharge_points[0];                                             //maximum capacity of a single cell
+    const int num_current_curves = sizeof(discharge_currents) / sizeof(discharge_currents[0]);  //number of discharge curves @ different currents
+
+    float min_OC_cell_voltage = open_circuit_voltage[0][0];  //funct. min_max requires that the min and max values are initalized within the range of the min max values
+    float max_OC_cell_voltage = open_circuit_voltage[0][0];
+    min_max<num_boards, num_cells>(open_circuit_voltage, &min_OC_cell_voltage, &max_OC_cell_voltage);
+    float discharged = interpolate<discharge_curve_length>(discharge_curves[0], discharge_points, min_OC_cell_voltage);  //capacity which has already been discharged (mAh)
+    soc = 100 - ((max_capacity - discharged) / max_capacity * 100);
+    
   Serial.print("SOC: ");
   Serial.println(soc);
   return soc;
@@ -809,12 +825,12 @@ void measure_voltage() {  //18 millisecond execution time
 
   poll_ADC(ADCV);  //initiate and wait for voltage measurement
 
+  pack_voltage = 0;
   for (int i = 0; i * 3 < num_cells; i++) {  //i: cell group
     //Serial.print('i');
     //Serial.println(i);
     uint16_t curr_comm = cell_comm[i];  //each command reads a sequential set of three cells from each board
     read_register_group(curr_comm, response);
-    pack_voltage = 0;
     for (int j = 0; j < num_boards; j++) {  //j:board number
       //Serial.print('j');
       //Serial.println(j);
@@ -1097,11 +1113,11 @@ uint8_t power_limit(float max_cell_temp) {
 }
 
 uint8_t float_2_uint8_t(float float_val, float min, float max) {  //float to uint8_t, clips values under/over min or max
-  if (max == min) { return (0); }                                 //divide by zero risk
-  if (float_val >= max) {                                         //overflow risk
+  if (max == min) { return (0); }                                 //divide by zero case
+  if (float_val >= max) {                                         //overflow case
     return max;
   }
-  if (float_val <= min) {  //overflow risk
+  if (float_val <= min) {  //overflow case
     return min;
   }
   uint8_t scaled = (uint8_t)(((float_val - min) / (max - min)) * 255.0);  //float decoded = ((float)scaled / 255.0) * (max - min) + min;

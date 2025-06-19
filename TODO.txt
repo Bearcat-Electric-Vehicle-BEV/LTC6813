@@ -1,20 +1,17 @@
-wakeup_sleep function delays need to be figured out. The Analog Device code works but the delays it uses are too small to wake all the boards.
+verify CAN
+verify SD card write
+add SOC
+standy - drive mode?
+
 
 add warnings
-Use Binary Search to map NTC resistance value to temperature
 Add 200A current sensing (this is a hardware issue)
-
+IsoSPI communication error handling
 Add CAN  (charging, status, SOC message, warnings)
-Add voltage-charge lookup table for SOC estimation
-debug mode (eliminate print statements in sections unless debug flag is set)
 Add sense board Initialization, status check (open wire, over and under voltage cells) (add flags for each condition)
 Add code to create a redundant loop for isoSPI communications 
-clear measurements after reading (add condition to watchdogfeed to make sure they are clear)
-measurement FIFO queue
 Add sense board Initialization (set under and over voltage/temperature limits for cells)
 BMS sense board status check (open wire, over and under voltages)
-Timer that count time since last isoSPI message was sent. Determine whether to wake boards from sleep
-Timer that counts since last CAN message was sent. 
 User Interface
 Ensure synchronous current and voltage measurements (add current measurement while BMS is blocking for the voltage tap ADCs)
 
@@ -41,10 +38,6 @@ BMS standby-> drive -> standby mode (inverter voltage threshold to enter and exi
 
 realtime time stamps?
 
-
-function check_memory
-We want to check how much memory is left on the SD card
--sum the size of every file on the SD card 
 
 
 
