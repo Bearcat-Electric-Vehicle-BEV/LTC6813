@@ -171,6 +171,7 @@ void setup() {
       measure_current();
       measure_voltage();
       measure_temp();
+      TX_CAN();       //wrong baud rate every other message
       print_min_max();
       reset_watchdog();
       msg = RX_CAN();
@@ -187,7 +188,7 @@ void setup() {
       
       String input = Serial.readStringUntil('\n');
       input.trim();
-      if (msg.id == INV_TX_ID) {  //Always check msg id
+      if (msg.id == INV_TX_ID && false) {  //Always check msg id. Stdby has not yet been tested
         mode = "standy";
         can.setBaudRate(500000);
         //can.setMBFilter(MB1, 0);  //Disable Charger Mailbox
@@ -197,7 +198,8 @@ void setup() {
         can.setBaudRate(250000);
         //can.setMBFilter(MB0, 0);  //Disable Inverter Mailbox
         break;
-      } else if (current >= 0.5) {
+      } else if (current >= 0.5) {    //enter directly into drive mode if current is detected
+        can.setBaudRate(500000);
         mode = "drive";
         break;
       } else if (input == "debug") {
@@ -842,7 +844,7 @@ void measure_voltage() {  //18 millisecond execution time
       }
     }
   }
-  if (current < 1 and current > -1) {
+  if (current < 0.2 and current > -0.2) {
     for (int i = 0; i < num_boards; ++i) {
       for (int j = 0; j < num_cells; ++j) {
         open_circuit_voltage[i][j] = cell_voltage[i][j];
