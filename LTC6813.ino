@@ -53,12 +53,15 @@ float _qt = 12.6 * 60;
 //LTC6813 minimum supply voltage is 16V
 
 #define CS 10   //chip select pin 
-#define num_boards 4
-#define num_cells 17       //cells per board
-#define max_temp 45
+#define num_boards 10
+#define num_cells 14       //cells per board
+#define max_temp 60
 #define min_temp 0
 #define wake_delay 2    //wake delay per board (milliseconds) to bring up power supply to voltage. Depends on Linear voltage regulator capacitance
 #define cell_RC 0.0001  //C pin filter RC time constant in milliseconds (R*C*1000)
+
+int mask_threshold = 2;                       //number of allowable open temperature sensor faults to be masked (reads 150 or -40 C)
+
 
 int wire_cut = 0;
 float cell_voltage[num_boards][num_cells];     //most recent cell voltages
@@ -524,8 +527,7 @@ void measure_voltage(){
   uint16_t cell_comm[6] = {RDCVA, RDCVB, RDCVC, RDCVD, RDCVE, RDCVF};   //read cell voltage registers A through E commands
 
   ////cell voltage measurement algorithm outlined in INTERNAL PROTECTION AND FILTERING section of LTC6813 datasheet////
-  poll_ADC(ADCV | 0b1);   //measure cells 1,7,13 to allow MUX voltage to settle
-  delay(cell_RC * 6);
+
   poll_ADC(ADCV);   //initiate and wait for voltage measurement
 
   for(int i=0; i*3 < num_cells; i++){         //i: cell group
@@ -634,7 +636,6 @@ void measure_temp(bool open_wire_check){
 
 bool reset_watchdog(){
   int num_temp_masked[num_boards] = {0};    //number of open wire (temp = 150) thermistors per board to be masked
-  int mask_threshold = 3;                       //number of allowable open temperature sensor faults to be masked
 
   for(int i = 0; i < num_boards; i++){
     for(int j = 0; j< num_cells; j++){
@@ -654,7 +655,7 @@ bool reset_watchdog(){
     for(int j = 0; j< 9; j++){          //9th temp sensor wired incorrectly
       if(cell_temp[i][j] == 150 || cell_temp[i][j] == -40){   //mask open wire faults
         num_temp_masked[i] += 1;
-        if(num_temp_masked[i] >= 3){
+        if(num_temp_masked[i] > mask_threshold){
           digitalWrite(20, LOW);
           Serial.print("Board "); Serial.print(i+1); Serial.print("Lost "); Serial.print(mask_threshold); Serial.println(" Sensors");
           return false;
