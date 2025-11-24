@@ -83,7 +83,11 @@ float currentbuffer_stat = 0;
 // RMS calc values
 long current_count = 0;
 long current_sum = 0;
+
 int RMS_Current = 0;
+
+void TX_CAN(CAN_message_t msg);
+void send_BMS_status();
 
 
 void setup() {
@@ -171,7 +175,7 @@ void setup() {
       measure_current();
       measure_voltage();
       measure_temp();
-      TX_CAN();       //wrong baud rate every other message
+      send_BMS_status();       //wrong baud rate every other message
       print_min_max();
       reset_watchdog();
       msg = RX_CAN();
@@ -352,7 +356,7 @@ void loop() {
       if (n % CAN_interval == 0) {
         Serial.println("Send CAN");
         update_SOC();
-        TX_CAN();
+        send_BMS_status();
       }
 
       // msg = RX_CAN();
@@ -1059,7 +1063,7 @@ void charger_enable(bool enable) {
   }
 }
 
-void TX_CAN() {
+void send_BMS_status() {
   measure_voltage();
   measure_temp();
   float min_cell_voltage = cell_voltage[0][0];
@@ -1073,10 +1077,6 @@ void TX_CAN() {
   uint8_t inst_power_limit = power_limit(max_cell_temp);
   Serial.print("Power Limit: ");
   Serial.println(inst_power_limit);
-
-  digitalWrite(STBY, LOW);
-  digitalWrite(CTX3, HIGH);
-  delay(1);
 
   CAN_message_t BMS_data;
   //BMS_data.id = BMS_ID; b
@@ -1094,8 +1094,16 @@ void TX_CAN() {
   BMS_data.buf[6] = inst_power_limit;                             // BMS Suggested Power Limit
   BMS_data.buf[7] = 0;
 
-  if (can.write(BMS_data)) {
-    Serial.println("CAN message sent 2");
+  TX_CAN(BMS_data);
+}
+
+void TX_CAN(CAN_message_t msg) {
+  digitalWrite(STBY, LOW);
+  digitalWrite(CTX3, HIGH);
+  delay(1);
+
+  if (can.write(msg)) {
+    Serial.println("CAN message sent");
   } else {
     Serial.println("CAN message TX Failed");
   }
