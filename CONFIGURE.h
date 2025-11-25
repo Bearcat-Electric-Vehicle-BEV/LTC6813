@@ -16,9 +16,9 @@ const float max_diff = 1.7;   //max difference between min and max cell for open
 const int watchdog_timeout = 10;  //watchdog timeout (in seconds). setting to 0 will DISABLE timer. Watchdog timer must be grester thatn 6 secibds
 
 //architecture
-const int num_boards = 5;
-const int num_cells = 17;       //cells per board
-const int num_parrallel = 3;
+const int num_boards = 1;
+const int num_cells = 16;       //cells per board
+const int num_parrallel = 1;
 
 //BMS operation mode. Leave as empty string to determine mode during runtime
 String mode = "";     //"", "charge", "standby", "drive", "debug"

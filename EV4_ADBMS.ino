@@ -839,7 +839,7 @@ void measure_voltage() {  //18 millisecond execution time
       for (int k = 0; k < 3 && i * 3 + k < num_cells; k++) {                                                         //cell number within register group
                                                                                                                      //Serial.print('k');
                                                                                                                      //Serial.println(k);
-        cell_voltage[j][i * 3 + k] = (float)(((uint8_t)response[j][k * 2 + 1] << 8) | response[j][k * 2]) * 0.0001;  //LSB represents 100 uV
+        cell_voltage[j][i * 3 + k] = (float)(((uint8_t)response[j][k * 2 + 1] << 8) | response[j][k * 2]) * 0.00015f + 1.5f;  //LSB represents 150 uV, +1.5v offset
         pack_voltage = pack_voltage + cell_voltage[j][i * 3 + k];
       }
     }
