@@ -301,12 +301,19 @@ void loop() {
       measure_temp();
       reset_watchdog();
       msg = RX_CAN();
+
+      // BYPASSED PRECHARGE CHECK - FIX IN FUTURE BY PULLING DATA FROM ECU
+      /*
       if (msg.id == INV_TX_ID) {
         inv_voltage = float(msg.buf[0] * 256 + msg.buf[1]);
       }
       if (inv_voltage >= pack_voltage * 0.8) {  //checks inverter voltage to see if precharge is occuring
         mode = "drive";                         //enter drive mode if precharging
         break;
+      */
+
+      mode = "drive"; //Temporary line to bypass precharge check
+      
       }
       delay(10);
     }
