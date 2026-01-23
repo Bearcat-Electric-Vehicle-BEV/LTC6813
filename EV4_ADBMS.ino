@@ -849,7 +849,6 @@ void read_register_group(uint16_t command, uint8_t response[num_boards][6]) { //
 
         calc_pec10 = pec10_calc_data_ccnt(response[i], ccmd);
 
-
         if (rx_pec10 != (calc_pec10 & 0x3FF)) {
             Serial.println("PEC Error - Data PEC Mismatch");
             wakeup_sleep(num_boards + 1);
