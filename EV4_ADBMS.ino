@@ -1089,18 +1089,18 @@ void measure_current() {
     digitalWrite(CS1, LOW);
 
     for (int i = 0; i < 2; i++)
-        SPI1.transfer(0b00000000); // clock ADC
+        SPI1.transfer(CLEAR_REG); // clock ADC
 
-    ADC = SPI1.transfer(0b00000000);
+    ADC = SPI1.transfer(CLEAR_REG);
     ADC = ADC << 8;
-    ADC = ADC | SPI1.transfer(0b00000000);
+    ADC = ADC | SPI1.transfer(CLEAR_REG);
     volt = (float)(ADC) / 65535 * 5;
     current = (volt - 2.5) / .0267 - current_offset; // this needs checked
 
     if (current > 50) { // so does this
-        ADC = SPI1.transfer(0b00000000);
+        ADC = SPI1.transfer(CLEAR_REG);
         ADC = ADC << 8;
-        ADC = ADC | SPI1.transfer(0b00000000);
+        ADC = ADC | SPI1.transfer(CLEAR_REG);
         volt = (float)(ADC) / 65535 * 5;
         current = (volt - 2.5) / .004 - current_offset; // this needs checked
     }
