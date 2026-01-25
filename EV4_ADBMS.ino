@@ -930,8 +930,8 @@ void measure_voltage() { // 18 millisecond execution time
             for (int k = 0; k < 3 && i * 3 + k < num_cells; k++) { // cell within cell group
                 // Serial.print('k');
                 // Serial.println(k);
-                uint16_t adc_val = ((uint8_t)response[j][k * 2 + 1] << 8) | response[j][k * 2]; // 2 bytes per reading
-                cell_voltage[j][i * 3 + k] = (float)adc_val * 0.00015f + 1.5f; // LSB represents 150 uV, +1.5v offset
+                uint16_t adc_code = ((uint8_t)response[j][k * 2 + 1] << 8) | response[j][k * 2]; // 2 bytes per reading
+                cell_voltage[j][i * 3 + k] = (float)adc_code * 0.00015f + 1.5f; // LSB represents 150 uV, +1.5v offset
                 pack_voltage += cell_voltage[j][i * 3 + k];
             }
         }
@@ -961,7 +961,7 @@ void measure_voltage() { // 18 millisecond execution time
     }
 }
 
-float map_temp(float V) {
+float map_voltage_to_temp(float &V) { // voltage -> actual temp
     int const size = sizeof(NTC_LUT) / sizeof(NTC_LUT[0]);
     float R_bias = 10000;
     float V_ref = 3.00;
@@ -970,23 +970,8 @@ float map_temp(float V) {
         return -55;
 
     float NTC_res = (V / V_ref * R_bias) / (1 - V / V_ref);
-
-    // int i = 0;
-    // float dist = std::abs(NTC_res - NTC_LUT[0]);
-    // for(i = 1; i<size; i++){
-    //   float new_dist = std::abs(NTC_res - NTC_LUT[i]);
-    //   if(new_dist < dist){
-    //     dist = new_dist;
-    //   }
-    //   else{
-    //     i--;
-    //     break;
-    //   }
-    // }
-
     int i = search<size>(NTC_LUT, NTC_res);
     float temperature = float(i) / float(size) * (150 + 55) - 55;
-    // temperature = V;
     return (temperature);
 }
 
@@ -1006,12 +991,13 @@ void measure_temp(bool open_wire_check) { // 25 millisecond execution time
                                                     // three GPIO from each board (RDAUXB is an
                                                     // exception with just 2 GPIO)
         read_register_group(curr_comm, response);
-        for (int k = 0; k < 3 && temp_num < 9; k++) {
+        for (int k = 0; k < 3 && temp_num < 9; k++) { // GPIO reading within group (~3 per group)
             if (command_num == 1 && k > 1) // register group B only contains 2 GPIO measurements
                 continue;
 
-            for (int j = 0; j < num_boards; j++) { // maximum of 3 GPIO per register group and 9 thermistors
-                cell_temp[j][temp_num] = (float)(((uint8_t)response[j][k * 2 + 1] << 8) | response[j][k * 2]) * 0.0001; // LSB represents 100 uV
+            for (int j = 0; j < num_boards; j++) {
+                uint16_t adc_code = ((uint8_t)response[j][k * 2 + 1] << 8) | response[j][k * 2];
+                cell_temp[j][temp_num] = (float)adc_code * 0.0001; // LSB represents 100 uV
                 // Serial.println(cell_temp[j][temp_num]);
             }
             temp_num++;
@@ -1021,7 +1007,7 @@ void measure_temp(bool open_wire_check) { // 25 millisecond execution time
 
     for (int i = 0; i < num_boards; i++)
         for (int j = 0; j < 9; j++)
-            cell_temp[i][j] = map_temp(cell_temp[i][j]);
+            map_voltage_to_temp(cell_temp[i][j]);
 
     new_temp = true;
 
