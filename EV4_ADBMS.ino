@@ -28,6 +28,7 @@ const int chipSelect = BUILTIN_SDCARD;
 #define SC 20 // shutdown circuit pin
 
 #define CLEAR_REG 0b00000000
+#define FULL_REG 0b11111111
 
 // counters
 unsigned int start_time = millis();
@@ -285,8 +286,7 @@ bool determineMode(CAN_message_t msg, bool CAN_baud_alt) {
         can.setBaudRate(250000);
         // can.setMBFilter(MB0, 0);  //Disable Inverter Mailbox
         return true;
-    } else if (current >= 0.5) { // enter directly into drive mode if current
-        // is detected
+    } else if (current >= 0.5) { // enter directly into drive mode if current is detected
         can.setBaudRate(500000);
         mode = Drive;
         return true;
@@ -798,8 +798,8 @@ void send_command(uint16_t command) {
     uint8_t cmd0;
     uint8_t cmd1;
 
-    cmd0 = command >> 8;
-    cmd1 = command >> 0;
+    cmd0 = command >> 8; // top 8 bits
+    cmd1 = command >> 0; // lower 8 bits
 
     if (millis() - sense_watchdog_timer >= 1800) {
         wakeup_sleep(num_boards + 1);
@@ -815,8 +815,8 @@ void send_command(uint16_t command) {
     comm_arr[1] = cmd1;
 
     pec = pec15_calc(2, comm_arr);
-    pec1 = pec >> 0;
     pec0 = pec >> 8;
+    pec1 = pec >> 0;
 
     SPI.transfer(cmd0);
     SPI.transfer(cmd1);
@@ -835,7 +835,7 @@ void read_register_group(uint16_t command, uint8_t response[num_boards][6]) { //
 
     for (int i = 0; i < num_boards; i++) {
         for (int j = 0; j < 6; j++) {
-            response[i][j] = SPI.transfer(0b11111111); // Send dummy byte to receive data
+            response[i][j] = SPI.transfer(FULL_REG); // Send dummy byte to receive data
             // Serial.println(response[i][j], BIN);
         }
 
@@ -885,8 +885,7 @@ void write_register_group(uint16_t command, uint8_t data[num_boards][6]) {
     digitalWrite(CS, HIGH);
 }
 
-void poll_ADC(uint16_t command, bool curr_measure)
-{
+void poll_ADC(uint16_t command, bool curr_measure) {
     uint8_t return_data = 0;
     send_command(command);
 
@@ -895,7 +894,7 @@ void poll_ADC(uint16_t command, bool curr_measure)
 
     int num_polls = 0;
     while (return_data == 0) { // This needs a timeout condition
-        return_data = SPI.transfer(0b11111111); // Send dummy byte to receive data
+        return_data = SPI.transfer(FULL_REG); // Send dummy byte to receive data
         num_polls++;
     }
     // Serial.println("ADC Conversion Done!");
@@ -904,13 +903,12 @@ void poll_ADC(uint16_t command, bool curr_measure)
     digitalWrite(CS, HIGH);
 }
 
-void measure_voltage()
-{ // 18 millisecond execution time
+void measure_voltage() { // 18 millisecond execution time
     uint8_t response[num_boards][6];
     uint16_t cell_comm[6] = {
         RDCVA, RDCVB, RDCVC,
         RDCVD, RDCVE, RDCVF
-    }; // read cell voltage registers A through E commands
+    }; // read cell voltage registers A through F commands
 
     ////cell voltage measurement algorithm outlined in INTERNAL PROTECTION AND
     /// FILTERING section of LTC6813 datasheet////
@@ -920,21 +918,21 @@ void measure_voltage()
     poll_ADC(ADCV); // initiate and wait for voltage measurement
 
     pack_voltage = 0;
-    for (int i = 0; i * 3 < num_cells; i++) { // i: cell group
+    for (int i = 0; i * 3 < num_cells; i++) { // i: cell group (3 cells per register group)
         // Serial.print('i');
         // Serial.println(i);
         uint16_t curr_comm = cell_comm[i]; // each command reads a sequential set
                                            // of three cells from each board
         read_register_group(curr_comm, response);
-        for (int j = 0; j < num_boards; j++) { // j:board number
+        for (int j = 0; j < num_boards; j++) { // j: board number
             // Serial.print('j');
             // Serial.println(j);
-            for (int k = 0; k < 3 && i * 3 + k < num_cells; k++) { // cell number within register group
+            for (int k = 0; k < 3 && i * 3 + k < num_cells; k++) { // cell within cell group
                 // Serial.print('k');
                 // Serial.println(k);
-                cell_voltage[j][i * 3 + k] = (float)(((uint8_t)response[j][k * 2 + 1] << 8) | 
-                    response[j][k * 2]) * 0.00015f + 1.5f; // LSB represents 150 uV, +1.5v offset
-                pack_voltage = pack_voltage + cell_voltage[j][i * 3 + k];
+                uint16_t adc_val = ((uint8_t)response[j][k * 2 + 1] << 8) | response[j][k * 2]; // 2 bytes per reading
+                cell_voltage[j][i * 3 + k] = (float)adc_val * 0.00015f + 1.5f; // LSB represents 150 uV, +1.5v offset
+                pack_voltage += cell_voltage[j][i * 3 + k];
             }
         }
     }
@@ -998,7 +996,7 @@ void measure_temp(bool open_wire_check) { // 25 millisecond execution time
     int temp_num = 0; // temperature reading index 0-8
     int command_num = 0; // command index within aux_comm array
 
-    if (open_wire_check == false)
+    if (!open_wire_check)
         poll_ADC(ADAX); // initiate and wait for GPIO measurement
     else
         poll_ADC(AXOW);
@@ -1502,7 +1500,7 @@ void wakeup_idle(uint8_t total_ic) { // idle after 4.3 ms of no isoSPI activity
     // Serial.println("wakeup_idle");
     for (int i = 0; i < total_ic + 1; i++) { //+1 IC for the LTC6820
         digitalWrite(CS, LOW);
-        SPI.transfer(0b11111111); // Guarantees the isoSPI will be in ready mode
+        SPI.transfer(FULL_REG); // Guarantees the isoSPI will be in ready mode
         digitalWrite(CS, HIGH);
     }
     delayMicroseconds(1); // This delay is absolutely needed: t5 in datasheet - CSB Rising Edge to CSB Falling Edge >= 0.65us
