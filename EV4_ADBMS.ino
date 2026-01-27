@@ -184,9 +184,9 @@ void loop() {
         precharge_cycle(msg, charger_voltage, charger_current);
         
         // 00100 low ac power on charger flag
-        delay(1000); // delay so that another Charger CAN message is sent to the
-                     // BMS (so that an empty CAN buffer is not read which would
-                     // indicate a charger error)
+        delay(1000);    // delay so that another Charger CAN message is sent to the
+                        // BMS (so that an empty CAN buffer is not read which would
+                        // indicate a charger error)
 
         uint32_t charge_start_time = millis();
         charge_cycle(msg, charger_voltage, charger_current, charge_start_time);
@@ -975,38 +975,96 @@ float map_voltage_to_temp(float &V) { // voltage -> actual temp
     return (temperature);
 }
 
-void measure_temp(bool open_wire_check) { // 25 millisecond execution time
+// void measure_temp(bool open_wire_check) { // 25 millisecond execution time
+//     uint8_t response[num_boards][6];
+//     uint16_t aux_comm[4] = {RDAUXA, RDAUXB, RDAUXC, RDAUXD}; // read aux registers A through D commands
+//     int temp_num = 0; // temperature reading index 0-8
+//     int command_num = 0; // command index within aux_comm array
+
+//     if (!open_wire_check)
+//         poll_ADC(ADAX); // initiate and wait for GPIO measurement
+//     else
+//         poll_ADC(AXOW);
+
+//     while (temp_num < 9) {
+//         uint16_t curr_comm = aux_comm[command_num]; // each command reads a sequential set of
+//                                                     // three GPIO from each board (RDAUXB is an
+//                                                     // exception with just 2 GPIO)
+//         read_register_group(curr_comm, response);
+//         for (int k = 0; k < 3 && temp_num < 9; k++) { // GPIO reading within group (~3 per group)
+//             if (command_num == 1 && k > 1) // register group B only contains 2 GPIO measurements
+//                 continue;
+
+//             for (int j = 0; j < num_boards; j++) {
+//                 uint16_t adc_code = ((uint8_t)response[j][k * 2 + 1] << 8) | response[j][k * 2];
+//                 cell_temp[j][temp_num] = (float)adc_code * 0.0001; // LSB represents 100 uV
+//                 // Serial.println(cell_temp[j][temp_num]);
+//             }
+//             temp_num++;
+//         }
+//         command_num++;
+//     }
+
+//     for (int i = 0; i < num_boards; i++)
+//         for (int j = 0; j < 9; j++)
+//             map_voltage_to_temp(cell_temp[i][j]);
+
+//     new_temp = true;
+
+//     if (debug) {
+//         Serial.println("Tempearatures:");
+//         for (int i = 0; i < num_boards; i++) {
+//             Serial.print("board: ");
+//             Serial.println(i + 1);
+//             for (int j = 0; j < 9; j++) {
+//                 Serial.print(cell_temp[i][j]);
+//                 Serial.print(" ");
+//             }
+//             Serial.println("");
+//         }
+//     }
+// }
+
+void measure_temp(bool open_wire_check) {
     uint8_t response[num_boards][6];
     uint16_t aux_comm[4] = {RDAUXA, RDAUXB, RDAUXC, RDAUXD}; // read aux registers A through D commands
-    int temp_num = 0; // temperature reading index 0-8
-    int command_num = 0; // command index within aux_comm array
+    int thermistor_idx = 0; // thermistor index 0-9
+    int command_idx = 0; // command index within aux_comm array
+    
+    /*
+     * AUX -> ADAX [... 1 0 OW PUP CH[4] 0 1 CH[3] CH[2] CH[1] CH[0]]
+     * AUX2 -> ADAX2
+     * poll with OW (8) set for open_wire
+     * will assume PUP = 1 (pull-up)
+     * will assume 10 thermistors
+     */
 
-    if (!open_wire_check)
-        poll_ADC(ADAX); // initiate and wait for GPIO measurement
+    if (open_wire_check)
+        poll_ADC(ADAX | OW); // initiate and wait for GPIO measurement
     else
-        poll_ADC(AXOW);
+        poll_ADC(ADAX);
 
-    while (temp_num < 9) {
-        uint16_t curr_comm = aux_comm[command_num]; // each command reads a sequential set of
-                                                    // three GPIO from each board (RDAUXB is an
-                                                    // exception with just 2 GPIO)
+    while (thermistor_idx < 10) {
+        uint16_t curr_comm = aux_comm[thermistor_idx];  // each command reads a sequential set of
+                                                        // three GPIO from each board (RDAUXB is an
+                                                        // exception with just 2 GPIO)
         read_register_group(curr_comm, response);
-        for (int k = 0; k < 3 && temp_num < 9; k++) { // GPIO reading within group (~3 per group)
-            if (command_num == 1 && k > 1) // register group B only contains 2 GPIO measurements
+        for (int reading = 0; reading < 3 && thermistor_idx < 10; reading++) { // GPIO reading within group (~3 per group)
+            if (command_idx == 1 && reading > 1) // register group B only contains 2 GPIO measurements
                 continue;
 
-            for (int j = 0; j < num_boards; j++) {
-                uint16_t adc_code = ((uint8_t)response[j][k * 2 + 1] << 8) | response[j][k * 2];
-                cell_temp[j][temp_num] = (float)adc_code * 0.0001; // LSB represents 100 uV
+            for (int b = 0; b < num_boards; b++) {
+                uint16_t adc_code = ((uint8_t)response[b][reading * 2 + 1] << 8) | response[b][reading * 2];
+                cell_temp[b][thermistor_idx] = (float)adc_code * 0.00015; // LSB represents 150 uV
                 // Serial.println(cell_temp[j][temp_num]);
             }
-            temp_num++;
+            thermistor_idx++;
         }
-        command_num++;
+        command_idx++;
     }
 
     for (int i = 0; i < num_boards; i++)
-        for (int j = 0; j < 9; j++)
+        for (int j = 0; j < 10; j++)
             map_voltage_to_temp(cell_temp[i][j]);
 
     new_temp = true;
@@ -1224,8 +1282,7 @@ CAN_message_t RX_CAN() { // grabs the first message in the FIFO.
                 // buffer returns 0 ID with 8 byte of zero data
 }
 
-void configure_sense()
-{
+void configure_sense() {
     uint8_t data[6];
     uint8_t data_arr[num_boards]
                     [6]; // contains identicle copies of data for each board
@@ -1258,7 +1315,7 @@ void configure_sense()
 }
 
 void balance(bool keep_going) {
-    bool discharge[num_boards][18] = {0}; //'1': needs dischaged, '0': does not need discharged
+    bool discharge[num_boards][18] = {0}; // '1': needs dischaged, '0': does not need discharged
     float min = cell_voltage[0][0];
     float max = cell_voltage[0][0];
 
@@ -1340,7 +1397,7 @@ void sense_status() { // really should be the measure die temp function
 
 void flash_leds() { // Flashes each discharge resistor sequentially
     int time_on = 1000; // Time each led is on in milliseconds
-    bool discharge[num_boards][18] = {0}; //'1': needs discharged, '0': does not need discharged
+    bool discharge[num_boards][18] = {0}; // '1': needs discharged, '0': does not need discharged
     for (int i = num_boards - 1; i >= 0; i--) {
         if (i % 4 < 2) {
             for (int j = 0; j < num_cells; j++) {
@@ -1362,8 +1419,8 @@ void flash_leds() { // Flashes each discharge resistor sequentially
     }
 }
 
-void discharge_cells(bool discharge[num_boards][18]) { // this function takes a 2D boolean array
-    // which is NOT dependent on num_cells.
+void discharge_cells(bool discharge[num_boards][18]) {  // this function takes a 2D boolean array
+                                                        // which is NOT dependent on num_cells.
     uint8_t data[6];
     uint8_t data_arr[num_boards][6];
     uint16_t VUV;
@@ -1389,8 +1446,7 @@ void discharge_cells(bool discharge[num_boards][18]) { // this function takes a 
 
     write_register_group(WRCFGA, data_arr);
     ////configuration register group B/////
-    for (int i = 0; i < num_boards; i++)
-    {
+    for (int i = 0; i < num_boards; i++) {
         data[0] = (uint8_t)discharge[i][15] << 7 | discharge[i][14] << 6 | discharge[i][13] << 5 | discharge[i][12] << 4 | 0b1111;
         data[1] = (uint8_t)discharge[i][17] | discharge[i][16];
         data[2] = (uint8_t)CLEAR_REG;
