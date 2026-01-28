@@ -1,5 +1,3 @@
-
-
 #ifndef LUTS_H  
 #define LUTS_H
 
