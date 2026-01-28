@@ -888,8 +888,8 @@ void poll_ADC(uint16_t command, bool curr_measure) {
     uint8_t return_data = 0;
     send_command(command);
 
-    if (!curr_sense_fault && curr_measure)
-        measure_current();
+    // if (!curr_sense_fault && curr_measure)
+    //     measure_current();
 
     int num_polls = 0;
     while (return_data == 0) { // This needs a timeout condition
@@ -908,11 +908,6 @@ void measure_voltage() { // 18 millisecond execution time
         RDCVA, RDCVB, RDCVC,
         RDCVD, RDCVE, RDCVF
     }; // read cell voltage registers A through F commands
-
-    ////cell voltage measurement algorithm outlined in INTERNAL PROTECTION AND
-    /// FILTERING section of LTC6813 datasheet////
-    // poll_ADC(ADCV | 0b1);   //measure cells 1,7,13 to allow MUX voltage to
-    // settle delay(cell_RC * 6);
 
     poll_ADC(ADCV); // initiate and wait for voltage measurement
 
@@ -960,7 +955,7 @@ void measure_voltage() { // 18 millisecond execution time
     }
 }
 
-float map_voltage_to_temp(float &V) { // voltage -> actual temp
+float map_voltage_to_temp(float V) { // voltage -> actual temp
     int const size = sizeof(NTC_LUT) / sizeof(NTC_LUT[0]);
     float R_bias = 10000;
     float V_ref = 3.00;
@@ -973,56 +968,6 @@ float map_voltage_to_temp(float &V) { // voltage -> actual temp
     float temperature = float(i) / float(size) * (150 + 55) - 55;
     return (temperature);
 }
-
-// void measure_temp(bool open_wire_check) { // 25 millisecond execution time
-//     uint8_t response[num_boards][6];
-//     uint16_t aux_comm[4] = {RDAUXA, RDAUXB, RDAUXC, RDAUXD}; // read aux registers A through D commands
-//     int temp_num = 0; // temperature reading index 0-8
-//     int command_num = 0; // command index within aux_comm array
-
-//     if (!open_wire_check)
-//         poll_ADC(ADAX); // initiate and wait for GPIO measurement
-//     else
-//         poll_ADC(AXOW);
-
-//     while (temp_num < 9) {
-//         uint16_t curr_comm = aux_comm[command_num]; // each command reads a sequential set of
-//                                                     // three GPIO from each board (RDAUXB is an
-//                                                     // exception with just 2 GPIO)
-//         read_register_group(curr_comm, response);
-//         for (int k = 0; k < 3 && temp_num < 9; k++) { // GPIO reading within group (~3 per group)
-//             if (command_num == 1 && k > 1) // register group B only contains 2 GPIO measurements
-//                 continue;
-
-//             for (int j = 0; j < num_boards; j++) {
-//                 uint16_t adc_code = ((uint8_t)response[j][k * 2 + 1] << 8) | response[j][k * 2];
-//                 cell_temp[j][temp_num] = (float)adc_code * 0.0001; // LSB represents 100 uV
-//                 // Serial.println(cell_temp[j][temp_num]);
-//             }
-//             temp_num++;
-//         }
-//         command_num++;
-//     }
-
-//     for (int i = 0; i < num_boards; i++)
-//         for (int j = 0; j < 9; j++)
-//             map_voltage_to_temp(cell_temp[i][j]);
-
-//     new_temp = true;
-
-//     if (debug) {
-//         Serial.println("Tempearatures:");
-//         for (int i = 0; i < num_boards; i++) {
-//             Serial.print("board: ");
-//             Serial.println(i + 1);
-//             for (int j = 0; j < 9; j++) {
-//                 Serial.print(cell_temp[i][j]);
-//                 Serial.print(" ");
-//             }
-//             Serial.println("");
-//         }
-//     }
-// }
 
 void measure_temp(bool open_wire_check) {
     uint8_t response[num_boards][6];
@@ -1044,31 +989,33 @@ void measure_temp(bool open_wire_check) {
         poll_ADC(ADAX);
 
     while (thermistor_idx < 10) {
-        uint16_t curr_comm = aux_comm[thermistor_idx];  // each command reads a sequential set of
+        uint16_t curr_comm = aux_comm[command_idx];     // each command reads a sequential set of
                                                         // three GPIO from each board (RDAUXB is an
                                                         // exception with just 2 GPIO)
         read_register_group(curr_comm, response);
         for (int reading = 0; reading < 3 && thermistor_idx < 10; reading++) { // GPIO reading within group (~3 per group)
+            if (command_idx == 3 && reading > 0) // Group register D has 1 reading only
+                continue;
+
             for (int b = 0; b < num_boards; b++) {
-                uint16_t adc_code = ((uint8_t)response[b][reading * 2 + 1] << 8) | response[b][reading * 2];
-                cell_temp[b][thermistor_idx] = (float)adc_code * 0.00015; // LSB represents 150 uV
-                // Serial.println(cell_temp[j][temp_num]);
+                uint16_t adc_code = ((uint16_t)response[b][reading * 2 + 1] << 8) | response[b][reading * 2];
+                cell_temp[b][thermistor_idx] = (float)adc_code * 0.00015f - 8.33f; // LSB represents 150 uV + 1.5V
             }
             thermistor_idx++;
         }
         command_idx++;
     }
 
-    for (int i = 0; i < num_boards; i++)
-        for (int j = 0; j < 10; j++)
-            map_voltage_to_temp(cell_temp[i][j]);
+    // for (int i = 0; i < num_boards; i++)
+    //     for (int j = 0; j < 10; j++)
+    //         cell_temp[i][j] = map_voltage_to_temp(cell_temp[i][j]);
 
-    new_temp = true;
+    // new_temp = true;
 
     if (debug) {
         Serial.println("Temperatures:");
         for (int i = 0; i < num_boards; i++) {
-            print_with_args("\tboard: %i\n\t", i + 1);
+            print_with_args("\tboard: %d\n\t", i + 1);
             for (int j = 0; j < 10; j++) {
                 print_with_args("%f ", cell_temp[i][j]);
             }

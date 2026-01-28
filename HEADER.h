@@ -16,20 +16,27 @@ String format_string(const char* format, va_list args) {
     for (int i = 0; format[i] != '\0'; i++) {
         if (format[i] == '%') {
             i++;
-            if (format[i] == 'd') {
+            switch (format[i]) {
+            case 'd': // INT
                 result += va_arg(args, int);
-            } else if (format[i] == 'f') {
+                break;
+            case 'f': // FLOAT OR DOUBLE
                 result += va_arg(args, double);
-            } else if (format[i] == 'c') {
+                break;
+            case 'c': // CHAR
                 result += (char)va_arg(args, int);
-            } else if (format[i] == 's') {
+                break;
+            case 's': // CHAR* (STRING)
                 result += va_arg(args, char*);
-            } else if (format[i] == 'u') {
+                break;
+            case 'u': // UNSIGNED INT
                 result += va_arg(args, unsigned int);
-            } else {
+                break;
+            default:
                 result += '%';
                 if (format[i] != '\0')
                     result += format[i];
+                break;
             }
         } else {
             result += format[i];
@@ -54,7 +61,7 @@ void println_with_args(const char* format, ...) {
     Serial.println(result);
 }
 
-template <size_t rows, size_t cols> inline void min_max(float arr_2D[rows][cols], float* min, float* max) {   // finds the max and min values in any static 2D array of floats
+template<size_t rows, size_t cols> inline void min_max(float arr_2D[rows][cols], float* min, float* max) {   // finds the max and min values in any static 2D array of floats
     for (size_t i = 0; i < rows; ++i) {                                                                       // min and max must be initalized to sensible values beforehand
         for (size_t j = 0; j < cols; ++j) {
             if (arr_2D[i][j] < *min)
@@ -66,7 +73,7 @@ template <size_t rows, size_t cols> inline void min_max(float arr_2D[rows][cols]
     }
 }
 
-template <size_t length> inline int search(const float arr[length], float value, bool return_lower = false) {       // searches a sorted DECRESAING list for the nearest element and returns its index. the "lower" flag if set will return the nearest element that is equal or lower
+template<size_t length> inline int search(const float arr[length], float value, bool return_lower = false) {       // searches a sorted DECRESAING list for the nearest element and returns its index. the "lower" flag if set will return the nearest element that is equal or lower
     // online function testbench:
     // https://www.programiz.com/online-compiler/5fkt3FMi4yJhY
     if (value >= arr[0]) 
@@ -94,7 +101,7 @@ template <size_t length> inline int search(const float arr[length], float value,
         return high; // arr[high] is closer
 }
 
-template <size_t length> inline float interpolate(const float arr_x[length], const float arr_y[length], float x_value) {       // linear interpolate an x-value from sorted DECREASING arrays: Y = Y1 + (Y2-Y1)/(X2-X1)*(X-X1)
+template<size_t length> inline float interpolate(const float arr_x[length], const float arr_y[length], float x_value) {       // linear interpolate an x-value from sorted DECREASING arrays: Y = Y1 + (Y2-Y1)/(X2-X1)*(X-X1)
     int x1_index = 0; 
     int x2_index = 0;
 
