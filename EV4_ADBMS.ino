@@ -69,7 +69,7 @@ float inv_voltage = 0;
 float cell_voltage[num_boards][num_cells]; // most recent cell voltages
 float open_circuit_voltage[num_boards][num_cells];
 float pack_voltage = 0; // sum of cell voltages
-float cell_temp[num_boards][9];     // most recent cell temperatures. Contains raw voltage data
+float cell_temp[num_boards][10];     // most recent cell temperatures. Contains raw voltage data
                                     // for the duration of open wire checks
 float die_temps[num_boards]; // most recent sense board LTC6813 die temps
 
@@ -411,7 +411,7 @@ void drive(int t, CAN_message_t msg) {
             Serial.println("New Temp");
             measure_temp();
             for (int i = 0; i < num_boards; i++) {
-                for (int j = 0; j < 9; j++) {
+                for (int j = 0; j < 10; j++) {
                     temp_buffer[int(t / temp_interval)][i][j] = cell_temp[i][j];
                 }
             }
@@ -559,7 +559,7 @@ void print_min_max() { // This function prints the min and max parameters
     float max_die_temp = die_temps[0];
 
     min_max<num_boards, num_cells>(cell_voltage, &min_cell_voltage, &max_cell_voltage);
-    min_max<num_boards, 9>(cell_temp, &min_cell_temp, &max_cell_temp);
+    min_max<num_boards, 10>(cell_temp, &min_cell_temp, &max_cell_temp);
     min_max<1, num_boards>(&die_temps, &min_die_temp, &max_die_temp); // This is how you pass a 1D array to the min_max function
 
     Serial.print("Max cell voltage: ");
@@ -756,7 +756,7 @@ void SD_data_write() {
             if (n % temp_interval == 0 || mode != Drive) {
                 dataFile.print("\nTemperature:\n");
                 for (int i = 0; i < num_boards; i++) {
-                    for (int j = 0; j < 9; j++) {
+                    for (int j = 0; j < 10; j++) {
                         if (mode == Drive)
                             dataFile.print(temp_buffer[int(n / temp_interval)][i][j], 2);
                         else
@@ -1044,12 +1044,12 @@ bool reset_watchdog() { // this needs to clear the voltage and temperature measu
     }
 
     for (int i = 0; i < num_boards; i++) {
-        for (int j = 0; j < 9; j++) {
+        for (int j = 0; j < 10; j++) {
             if (cell_temp[i][j] > min_temp && cell_temp[i][j] < max_temp) {
                 cell_temp[i][j] = min_temp;
                 continue;
             } else {
-                digitalWrite(20, LOW);
+                digitalWrite(SC, LOW);
                 delay(1000); // delay to overcome debounce of shutdown circuit
                 Serial.print("invalid temp Board:  ");
                 Serial.print(i + 1);
@@ -1142,7 +1142,7 @@ void TX_CAN() {
     // float min_die_temp = die_temps[0];
     // float max_die_temp = die_temps[0];
     min_max<num_boards, num_cells>(cell_voltage, &min_cell_voltage, &max_cell_voltage);
-    min_max<num_boards, 9>(cell_temp, &min_cell_temp, &max_cell_temp);
+    min_max<num_boards, 10>(cell_temp, &min_cell_temp, &max_cell_temp);
     uint8_t inst_power_limit = power_limit(max_cell_temp);
     Serial.print("Power Limit: ");
     Serial.println(inst_power_limit);
