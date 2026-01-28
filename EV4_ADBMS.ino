@@ -21,13 +21,13 @@
 const int chipSelect = BUILTIN_SDCARD;
 
 // SPI pins
-#define CS 10  // chip select pin isoSPI
-#define CS2 38 // 3nd chip select pin isoSPI
-#define CS1 0  // chip select for ADC
+#define CS          10      // chip select pin isoSPI
+#define CS2         38      // 3nd chip select pin isoSPI
+#define CS1         0       // chip select for ADC
+#define SC          20      // shutdown circuit pin
 
-#define SC 20 // shutdown circuit pin
-
-#define CLEAR_REG 0b00000000
+#define CLEAR_REG   0b00000000
+#define FULL_REG    0b11111111
 
 // counters
 unsigned int start_time = millis();
@@ -69,8 +69,8 @@ float inv_voltage = 0;
 float cell_voltage[num_boards][num_cells]; // most recent cell voltages
 float open_circuit_voltage[num_boards][num_cells];
 float pack_voltage = 0; // sum of cell voltages
-float cell_temp[num_boards][9];        // most recent cell temperatures. Contains raw voltage data
-                                       // for the duration of open wire checks
+float cell_temp[num_boards][10];     // most recent cell temperatures. Contains raw voltage data
+                                    // for the duration of open wire checks
 float die_temps[num_boards]; // most recent sense board LTC6813 die temps
 
 // sense board flags
@@ -183,9 +183,9 @@ void loop() {
         precharge_cycle(msg, charger_voltage, charger_current);
         
         // 00100 low ac power on charger flag
-        delay(1000); // delay so that another Charger CAN message is sent to the
-                     // BMS (so that an empty CAN buffer is not read which would
-                     // indicate a charger error)
+        delay(1000);    // delay so that another Charger CAN message is sent to the
+                        // BMS (so that an empty CAN buffer is not read which would
+                        // indicate a charger error)
 
         uint32_t charge_start_time = millis();
         charge_cycle(msg, charger_voltage, charger_current, charge_start_time);
@@ -285,8 +285,7 @@ bool determineMode(CAN_message_t msg, bool CAN_baud_alt) {
         can.setBaudRate(250000);
         // can.setMBFilter(MB0, 0);  //Disable Inverter Mailbox
         return true;
-    } else if (current >= 0.5) { // enter directly into drive mode if current
-        // is detected
+    } else if (current >= 0.5) { // enter directly into drive mode if current is detected
         can.setBaudRate(500000);
         mode = Drive;
         return true;
@@ -412,7 +411,7 @@ void drive(int t, CAN_message_t msg) {
             Serial.println("New Temp");
             measure_temp();
             for (int i = 0; i < num_boards; i++) {
-                for (int j = 0; j < 9; j++) {
+                for (int j = 0; j < 10; j++) {
                     temp_buffer[int(t / temp_interval)][i][j] = cell_temp[i][j];
                 }
             }
@@ -560,7 +559,7 @@ void print_min_max() { // This function prints the min and max parameters
     float max_die_temp = die_temps[0];
 
     min_max<num_boards, num_cells>(cell_voltage, &min_cell_voltage, &max_cell_voltage);
-    min_max<num_boards, 9>(cell_temp, &min_cell_temp, &max_cell_temp);
+    min_max<num_boards, 10>(cell_temp, &min_cell_temp, &max_cell_temp);
     min_max<1, num_boards>(&die_temps, &min_die_temp, &max_die_temp); // This is how you pass a 1D array to the min_max function
 
     Serial.print("Max cell voltage: ");
@@ -757,7 +756,7 @@ void SD_data_write() {
             if (n % temp_interval == 0 || mode != Drive) {
                 dataFile.print("\nTemperature:\n");
                 for (int i = 0; i < num_boards; i++) {
-                    for (int j = 0; j < 9; j++) {
+                    for (int j = 0; j < 10; j++) {
                         if (mode == Drive)
                             dataFile.print(temp_buffer[int(n / temp_interval)][i][j], 2);
                         else
@@ -798,8 +797,8 @@ void send_command(uint16_t command) {
     uint8_t cmd0;
     uint8_t cmd1;
 
-    cmd0 = command >> 8;
-    cmd1 = command >> 0;
+    cmd0 = command >> 8; // top 8 bits
+    cmd1 = command >> 0; // lower 8 bits
 
     if (millis() - sense_watchdog_timer >= 1800) {
         wakeup_sleep(num_boards + 1);
@@ -815,8 +814,8 @@ void send_command(uint16_t command) {
     comm_arr[1] = cmd1;
 
     pec = pec15_calc(2, comm_arr);
-    pec1 = pec >> 0;
     pec0 = pec >> 8;
+    pec1 = pec >> 0;
 
     SPI.transfer(cmd0);
     SPI.transfer(cmd1);
@@ -835,7 +834,7 @@ void read_register_group(uint16_t command, uint8_t response[num_boards][6]) { //
 
     for (int i = 0; i < num_boards; i++) {
         for (int j = 0; j < 6; j++) {
-            response[i][j] = SPI.transfer(0b11111111); // Send dummy byte to receive data
+            response[i][j] = SPI.transfer(FULL_REG); // Send dummy byte to receive data
             // Serial.println(response[i][j], BIN);
         }
 
@@ -885,17 +884,16 @@ void write_register_group(uint16_t command, uint8_t data[num_boards][6]) {
     digitalWrite(CS, HIGH);
 }
 
-void poll_ADC(uint16_t command, bool curr_measure)
-{
+void poll_ADC(uint16_t command, bool curr_measure) {
     uint8_t return_data = 0;
     send_command(command);
 
-    if (!curr_sense_fault && curr_measure)
-        measure_current();
+    // if (!curr_sense_fault && curr_measure)
+    //     measure_current();
 
     int num_polls = 0;
     while (return_data == 0) { // This needs a timeout condition
-        return_data = SPI.transfer(0b11111111); // Send dummy byte to receive data
+        return_data = SPI.transfer(FULL_REG); // Send dummy byte to receive data
         num_polls++;
     }
     // Serial.println("ADC Conversion Done!");
@@ -904,37 +902,31 @@ void poll_ADC(uint16_t command, bool curr_measure)
     digitalWrite(CS, HIGH);
 }
 
-void measure_voltage()
-{ // 18 millisecond execution time
+void measure_voltage() { // 18 millisecond execution time
     uint8_t response[num_boards][6];
     uint16_t cell_comm[6] = {
         RDCVA, RDCVB, RDCVC,
         RDCVD, RDCVE, RDCVF
-    }; // read cell voltage registers A through E commands
-
-    ////cell voltage measurement algorithm outlined in INTERNAL PROTECTION AND
-    /// FILTERING section of LTC6813 datasheet////
-    // poll_ADC(ADCV | 0b1);   //measure cells 1,7,13 to allow MUX voltage to
-    // settle delay(cell_RC * 6);
+    }; // read cell voltage registers A through F commands
 
     poll_ADC(ADCV); // initiate and wait for voltage measurement
 
     pack_voltage = 0;
-    for (int i = 0; i * 3 < num_cells; i++) { // i: cell group
+    for (int i = 0; i * 3 < num_cells; i++) { // i: cell group (3 cells per register group)
         // Serial.print('i');
         // Serial.println(i);
         uint16_t curr_comm = cell_comm[i]; // each command reads a sequential set
                                            // of three cells from each board
         read_register_group(curr_comm, response);
-        for (int j = 0; j < num_boards; j++) { // j:board number
+        for (int j = 0; j < num_boards; j++) { // j: board number
             // Serial.print('j');
             // Serial.println(j);
-            for (int k = 0; k < 3 && i * 3 + k < num_cells; k++) { // cell number within register group
+            for (int k = 0; k < 3 && i * 3 + k < num_cells; k++) { // cell within cell group
                 // Serial.print('k');
                 // Serial.println(k);
-                cell_voltage[j][i * 3 + k] = (float)(((uint8_t)response[j][k * 2 + 1] << 8) | 
-                    response[j][k * 2]) * 0.00015f + 1.5f; // LSB represents 150 uV, +1.5v offset
-                pack_voltage = pack_voltage + cell_voltage[j][i * 3 + k];
+                uint16_t adc_code = ((uint8_t)response[j][k * 2 + 1] << 8) | response[j][k * 2]; // 2 bytes per reading
+                cell_voltage[j][i * 3 + k] = (float)adc_code * 0.00015f + 1.5f; // LSB represents 150 uV, +1.5v offset
+                pack_voltage += cell_voltage[j][i * 3 + k];
             }
         }
     }
@@ -963,7 +955,7 @@ void measure_voltage()
     }
 }
 
-float map_temp(float V) {
+float map_voltage_to_temp(float V) { // voltage -> actual temp
     int const size = sizeof(NTC_LUT) / sizeof(NTC_LUT[0]);
     float R_bias = 10000;
     float V_ref = 3.00;
@@ -972,69 +964,60 @@ float map_temp(float V) {
         return -55;
 
     float NTC_res = (V / V_ref * R_bias) / (1 - V / V_ref);
-
-    // int i = 0;
-    // float dist = std::abs(NTC_res - NTC_LUT[0]);
-    // for(i = 1; i<size; i++){
-    //   float new_dist = std::abs(NTC_res - NTC_LUT[i]);
-    //   if(new_dist < dist){
-    //     dist = new_dist;
-    //   }
-    //   else{
-    //     i--;
-    //     break;
-    //   }
-    // }
-
     int i = search<size>(NTC_LUT, NTC_res);
     float temperature = float(i) / float(size) * (150 + 55) - 55;
-    // temperature = V;
     return (temperature);
 }
 
-void measure_temp(bool open_wire_check) { // 25 millisecond execution time
+void measure_temp(bool open_wire_check) {
     uint8_t response[num_boards][6];
     uint16_t aux_comm[4] = {RDAUXA, RDAUXB, RDAUXC, RDAUXD}; // read aux registers A through D commands
-    int temp_num = 0; // temperature reading index 0-8
-    int command_num = 0; // command index within aux_comm array
+    int thermistor_idx = 0; // thermistor index 0-9
+    int command_idx = 0; // command index within aux_comm array
+    
+    /*
+     * AUX -> ADAX [... 1 0 OW PUP CH[4] 0 1 CH[3] CH[2] CH[1] CH[0]]
+     * AUX2 -> ADAX2
+     * poll with OW (8) set for open_wire
+     * will assume PUP = 1 (pull-up)
+     * will assume 10 thermistors
+     */
 
-    if (open_wire_check == false)
-        poll_ADC(ADAX); // initiate and wait for GPIO measurement
+    if (open_wire_check)
+        poll_ADC(ADAX | OW); // initiate and wait for GPIO measurement
     else
-        poll_ADC(AXOW);
+        poll_ADC(ADAX);
 
-    while (temp_num < 9) {
-        uint16_t curr_comm = aux_comm[command_num]; // each command reads a sequential set of
-                                                    // three GPIO from each board (RDAUXB is an
-                                                    // exception with just 2 GPIO)
+    while (thermistor_idx < 10) {
+        uint16_t curr_comm = aux_comm[command_idx];     // each command reads a sequential set of
+                                                        // three GPIO from each board (RDAUXB is an
+                                                        // exception with just 2 GPIO)
         read_register_group(curr_comm, response);
-        for (int k = 0; k < 3 && temp_num < 9; k++) {
-            if (command_num == 1 && k > 1) // register group B only contains 2 GPIO measurements
+        for (int reading = 0; reading < 3 && thermistor_idx < 10; reading++) { // GPIO reading within group (~3 per group)
+            if (command_idx == 3 && reading > 0) // Group register D has 1 reading only
                 continue;
 
-            for (int j = 0; j < num_boards; j++) { // maximum of 3 GPIO per register group and 9 thermistors
-                cell_temp[j][temp_num] = (float)(((uint8_t)response[j][k * 2 + 1] << 8) | response[j][k * 2]) * 0.0001; // LSB represents 100 uV
-                // Serial.println(cell_temp[j][temp_num]);
+            for (int b = 0; b < num_boards; b++) {
+                uint16_t adc_code = ((uint16_t)response[b][reading * 2 + 1] << 8) | response[b][reading * 2];
+                cell_temp[b][thermistor_idx] = (float)adc_code * 0.00015f - 8.33f; // LSB represents 150 uV + 1.5V
             }
-            temp_num++;
+            thermistor_idx++;
         }
-        command_num++;
+        command_idx++;
     }
 
-    for (int i = 0; i < num_boards; i++)
-        for (int j = 0; j < 9; j++)
-            cell_temp[i][j] = map_temp(cell_temp[i][j]);
+    // for (int i = 0; i < num_boards; i++)
+    //     for (int j = 0; j < 10; j++)
+    //         cell_temp[i][j] = map_voltage_to_temp(cell_temp[i][j]);
 
-    new_temp = true;
+    // new_temp = true;
 
     if (debug) {
-        Serial.println("Tempearatures:");
+        Serial.println("Temperatures:");
         for (int i = 0; i < num_boards; i++) {
-            Serial.print("board: ");
-            Serial.println(i + 1);
-            for (int j = 0; j < 9; j++) {
-                Serial.print(cell_temp[i][j]);
-                Serial.print(" ");
+            print_with_args("\tboard: %d\n\t", i + 1);
+            for (int j = 0; j < 10; j++) {
+                print_with_args("%f ", cell_temp[i][j]);
             }
             Serial.println("");
         }
@@ -1061,12 +1044,12 @@ bool reset_watchdog() { // this needs to clear the voltage and temperature measu
     }
 
     for (int i = 0; i < num_boards; i++) {
-        for (int j = 0; j < 9; j++) {
+        for (int j = 0; j < 10; j++) {
             if (cell_temp[i][j] > min_temp && cell_temp[i][j] < max_temp) {
                 cell_temp[i][j] = min_temp;
                 continue;
             } else {
-                digitalWrite(20, LOW);
+                digitalWrite(SC, LOW);
                 delay(1000); // delay to overcome debounce of shutdown circuit
                 Serial.print("invalid temp Board:  ");
                 Serial.print(i + 1);
@@ -1159,7 +1142,7 @@ void TX_CAN() {
     // float min_die_temp = die_temps[0];
     // float max_die_temp = die_temps[0];
     min_max<num_boards, num_cells>(cell_voltage, &min_cell_voltage, &max_cell_voltage);
-    min_max<num_boards, 9>(cell_temp, &min_cell_temp, &max_cell_temp);
+    min_max<num_boards, 10>(cell_temp, &min_cell_temp, &max_cell_temp);
     uint8_t inst_power_limit = power_limit(max_cell_temp);
     Serial.print("Power Limit: ");
     Serial.println(inst_power_limit);
@@ -1211,7 +1194,7 @@ uint8_t float_2_uint8_t(float float_val, float min, float max) { // float to uin
     if (float_val >= max) return max; // overflow
     if (float_val <= min) return min; // underflow
 
-    uint8_t scaled = (uint8_t)(((float_val - min) / (max - min)) *255.0); 
+    uint8_t scaled = (uint8_t)(((float_val - min) / (max - min)) * 255.0); 
     // float decoded = ((float)scaled / 255.0) * (max - min) + min;
     return (scaled);
 }
@@ -1240,8 +1223,7 @@ CAN_message_t RX_CAN() { // grabs the first message in the FIFO.
                 // buffer returns 0 ID with 8 byte of zero data
 }
 
-void configure_sense()
-{
+void configure_sense() {
     uint8_t data[6];
     uint8_t data_arr[num_boards]
                     [6]; // contains identicle copies of data for each board
@@ -1273,58 +1255,58 @@ void configure_sense()
     write_register_group(WRCFGA, data_arr);
 }
 
-void balance(bool keep_going) {
-    bool discharge[num_boards][18] = {0}; //'1': needs dischaged, '0': does not need discharged
-    float min = cell_voltage[0][0];
-    float max = cell_voltage[0][0];
+// void balance(bool keep_going) {
+//     bool discharge[num_boards][18] = {0}; // '1': needs dischaged, '0': does not need discharged
+//     float min = cell_voltage[0][0];
+//     float max = cell_voltage[0][0];
 
-    sense_status();
-    ////mark cells to be discharged////
-    min_max<num_boards, num_cells>(cell_voltage, &min, &max);
-    Serial.print("min cell voltage: ");
-    Serial.println(min);
-    Serial.print("max cell voltage: ");
-    Serial.println(max);
-    Serial.println("Cells to be discharged");
+//     sense_status();
+//     ////mark cells to be discharged////
+//     min_max<num_boards, num_cells>(cell_voltage, &min, &max);
+//     Serial.print("min cell voltage: ");
+//     Serial.println(min);
+//     Serial.print("max cell voltage: ");
+//     Serial.println(max);
+//     Serial.println("Cells to be discharged");
 
-    if (keep_going) {
-        for (int i = 0; i < num_boards; i++) {
-            for (int j = 0; j < num_cells; j++) {
-                discharge[i][j] = cell_voltage[i][j] > min &&
-                                  cell_voltage[i][j] > balance_threshold &&
-                                  die_temps[i] < 60.0f;
-                if (discharge[i][j]) {
-                    Serial.print("Board: ");
-                    Serial.print(i + 1);
-                    Serial.print("  Cell: ");
-                    Serial.print(j + 1);
-                    Serial.print(" Volt: ");
-                    Serial.println(cell_voltage[i][j]);
-                    Serial.print("die temp: ");
-                    Serial.println(die_temps[i]);
-                }
-            }
-        }
-    }
+//     if (keep_going) {
+//         for (int i = 0; i < num_boards; i++) {
+//             for (int j = 0; j < num_cells; j++) {
+//                 discharge[i][j] = cell_voltage[i][j] > min &&
+//                                   cell_voltage[i][j] > balance_threshold &&
+//                                   die_temps[i] < 60.0f;
+//                 if (discharge[i][j]) {
+//                     Serial.print("Board: ");
+//                     Serial.print(i + 1);
+//                     Serial.print("  Cell: ");
+//                     Serial.print(j + 1);
+//                     Serial.print(" Volt: ");
+//                     Serial.println(cell_voltage[i][j]);
+//                     Serial.print("die temp: ");
+//                     Serial.println(die_temps[i]);
+//                 }
+//             }
+//         }
+//     }
 
-    discharge_cells(discharge);
+//     discharge_cells(discharge);
 
-    if (balance_threshold < min)
-        balance_threshold = min;
-}
+//     if (balance_threshold < min)
+//         balance_threshold = min;
+// }
 
-void sense_status() { // really should be the measure die temp function
-    uint8_t response[num_boards][6];
-    poll_ADC(ADSTAT);
-    read_register_group(RDSTATA, response);
-    Serial.println("die_temps");
+// void sense_status() { // really should be the measure die temp function
+//     uint8_t response[num_boards][6];
+//     poll_ADC(ADSTAT);
+//     read_register_group(RDSTATA, response);
+//     Serial.println("die_temps");
 
-    for (int i = 0; i < num_boards; i++) {
-        die_temps[i] = (response[i][2] | response[i][3] << 8) * (0.0001 / .0076) - 276;
-        Serial.println(die_temps[i]);
-    }
-    Serial.println();
-}
+//     for (int i = 0; i < num_boards; i++) {
+//         die_temps[i] = (response[i][2] | response[i][3] << 8) * (0.0001 / .0076) - 276;
+//         Serial.println(die_temps[i]);
+//     }
+//     Serial.println();
+// }
 
 // void sense_status(){
 //   uint8_t response[num_boards][6];
@@ -1356,7 +1338,7 @@ void sense_status() { // really should be the measure die temp function
 
 void flash_leds() { // Flashes each discharge resistor sequentially
     int time_on = 1000; // Time each led is on in milliseconds
-    bool discharge[num_boards][18] = {0}; //'1': needs discharged, '0': does not need discharged
+    bool discharge[num_boards][18] = {0}; // '1': needs discharged, '0': does not need discharged
     for (int i = num_boards - 1; i >= 0; i--) {
         if (i % 4 < 2) {
             for (int j = 0; j < num_cells; j++) {
@@ -1378,8 +1360,8 @@ void flash_leds() { // Flashes each discharge resistor sequentially
     }
 }
 
-void discharge_cells(bool discharge[num_boards][18]) { // this function takes a 2D boolean array
-    // which is NOT dependent on num_cells.
+void discharge_cells(bool discharge[num_boards][18]) {  // this function takes a 2D boolean array
+                                                        // which is NOT dependent on num_cells.
     uint8_t data[6];
     uint8_t data_arr[num_boards][6];
     uint16_t VUV;
@@ -1405,8 +1387,7 @@ void discharge_cells(bool discharge[num_boards][18]) { // this function takes a 
 
     write_register_group(WRCFGA, data_arr);
     ////configuration register group B/////
-    for (int i = 0; i < num_boards; i++)
-    {
+    for (int i = 0; i < num_boards; i++) {
         data[0] = (uint8_t)discharge[i][15] << 7 | discharge[i][14] << 6 | discharge[i][13] << 5 | discharge[i][12] << 4 | 0b1111;
         data[1] = (uint8_t)discharge[i][17] | discharge[i][16];
         data[2] = (uint8_t)CLEAR_REG;
@@ -1502,7 +1483,7 @@ void wakeup_idle(uint8_t total_ic) { // idle after 4.3 ms of no isoSPI activity
     // Serial.println("wakeup_idle");
     for (int i = 0; i < total_ic + 1; i++) { //+1 IC for the LTC6820
         digitalWrite(CS, LOW);
-        SPI.transfer(0b11111111); // Guarantees the isoSPI will be in ready mode
+        SPI.transfer(FULL_REG); // Guarantees the isoSPI will be in ready mode
         digitalWrite(CS, HIGH);
     }
     delayMicroseconds(1); // This delay is absolutely needed: t5 in datasheet - CSB Rising Edge to CSB Falling Edge >= 0.65us
