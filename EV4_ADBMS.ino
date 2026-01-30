@@ -558,9 +558,9 @@ void print_min_max() { // This function prints the min and max parameters
     float min_die_temp = die_temps[0];
     float max_die_temp = die_temps[0];
 
-    min_max<num_boards, num_cells>(cell_voltage, &min_cell_voltage, &max_cell_voltage);
-    min_max<num_boards, 10>(cell_temp, &min_cell_temp, &max_cell_temp);
-    min_max<1, num_boards>(&die_temps, &min_die_temp, &max_die_temp); // This is how you pass a 1D array to the min_max function
+    min_max<num_boards, num_cells>(cell_voltage, min_cell_voltage, max_cell_voltage);
+    min_max<num_boards, 10>(cell_temp, min_cell_temp, max_cell_temp);
+    min_max<1, num_boards>(&die_temps, min_die_temp, max_die_temp); // This is how you pass a 1D array to the min_max function
 
     Serial.print("Max cell voltage: ");
     Serial.println(max_cell_voltage);
@@ -711,7 +711,7 @@ float update_SOC() {
                                                             // max values are initalized within the
                                                             // range of the min max values
     float max_OC_cell_voltage = open_circuit_voltage[0][0];
-    min_max<num_boards, num_cells>(open_circuit_voltage, &min_OC_cell_voltage, &max_OC_cell_voltage);
+    min_max<num_boards, num_cells>(open_circuit_voltage, min_OC_cell_voltage, max_OC_cell_voltage);
     float discharged = interpolate<discharge_curve_length>( // capacity which has already been discharged (mAh)
         discharge_curves[0], 
         discharge_points, 
@@ -1141,8 +1141,8 @@ void TX_CAN() {
     float max_cell_temp = cell_temp[0][0];
     // float min_die_temp = die_temps[0];
     // float max_die_temp = die_temps[0];
-    min_max<num_boards, num_cells>(cell_voltage, &min_cell_voltage, &max_cell_voltage);
-    min_max<num_boards, 10>(cell_temp, &min_cell_temp, &max_cell_temp);
+    min_max<num_boards, num_cells>(cell_voltage, min_cell_voltage, max_cell_voltage);
+    min_max<num_boards, 10>(cell_temp, min_cell_temp, max_cell_temp);
     uint8_t inst_power_limit = power_limit(max_cell_temp);
     Serial.print("Power Limit: ");
     Serial.println(inst_power_limit);
@@ -1225,15 +1225,11 @@ CAN_message_t RX_CAN() { // grabs the first message in the FIFO.
 
 void configure_sense() {
     uint8_t data[6];
-    uint8_t data_arr[num_boards]
-                    [6]; // contains identicle copies of data for each board
+    uint8_t data_arr[num_boards][6]; // contains identicle copies of data for each board
     uint16_t VUV;
     uint16_t VOV;
-    VUV = UV / (16 * 0.0001) - 1; // Comparison Voltage = (VUV + 1) • 16 • 100μV
-                                  // (pg. 68 in datasheet)
-    VOV = OV / (16 * 0.0001);     // Comparison Voltage = VOV • 16 • 100μV (pg. 68 in
-                                  // datasheet)
-
+    VUV = UV / (16 * 0.0001) - 1; // Comparison Voltage = (VUV + 1) • 16 • 100μV (pg. 68 in datasheet)
+    VOV = OV / (16 * 0.0001);     // Comparison Voltage = VOV • 16 • 100μV (pg. 68 in datasheet)
     Serial.println(VUV, BIN);
     Serial.println(VOV, BIN);
 
@@ -1260,7 +1256,7 @@ void configure_sense() {
 //     float min = cell_voltage[0][0];
 //     float max = cell_voltage[0][0];
 
-//     sense_status();
+//     measure_die_temp();
 //     ////mark cells to be discharged////
 //     min_max<num_boards, num_cells>(cell_voltage, &min, &max);
 //     Serial.print("min cell voltage: ");
@@ -1295,7 +1291,7 @@ void configure_sense() {
 //         balance_threshold = min;
 // }
 
-// void sense_status() { // really should be the measure die temp function
+// void measure_die_temp() {
 //     uint8_t response[num_boards][6];
 //     poll_ADC(ADSTAT);
 //     read_register_group(RDSTATA, response);
@@ -1309,31 +1305,32 @@ void configure_sense() {
 // }
 
 // void sense_status(){
-//   uint8_t response[num_boards][6];
-//   read_register_group(RDSTATB , response);
+//     uint8_t response[num_boards][6];
+//     read_register_group(RDSTATB , response);
 
-//   undervoltage_flag[0] = response[2]>>0 & 0b1;
-//   undervoltage_flag[1] = response[2]>>2 & 0b1;
-//   undervoltage_flag[2] = response[2]>>4 & 0b1;
-//   undervoltage_flag[3] = response[2]>>6 & 0b1;
-//   undervoltage_flag[4] = response[3]>>0 & 0b1;
-//   undervoltage_flag[5] = response[3]>>2 & 0b1;
-//   undervoltage_flag[6] = 0;
-//   undervoltage_flag[7] = 0;
-//   undervoltage_flag[8] = 0;
-//   undervoltage_flag[9] = 0;
-//   undervoltage_flag[10] = 0;
-//   undervoltage_flag[11] = 0;
-//   undervoltage_flag[12] = 0;
-//   undervoltage_flag[13] = 0;
-//   undervoltage_flag[14] = 0;
-//   undervoltage_flag[15] = 0;
-//   Serial.println("voltage flags");
-//   for(int i = 0; i<=5; i++){
-//     Serial.println(undervoltage_flag[i]);
-//   }
-//   Serial.println("done");
+//     undervoltage_flag[0] = response[2]>>0 & 0b1;
+//     undervoltage_flag[1] = response[2]>>2 & 0b1;
+//     undervoltage_flag[2] = response[2]>>4 & 0b1;
+//     undervoltage_flag[3] = response[2]>>6 & 0b1;
+//     undervoltage_flag[4] = response[3]>>0 & 0b1;
+//     undervoltage_flag[5] = response[3]>>2 & 0b1;
+//     undervoltage_flag[6] = 0;
+//     undervoltage_flag[7] = 0;
+//     undervoltage_flag[8] = 0;
+//     undervoltage_flag[9] = 0;
+//     undervoltage_flag[10] = 0;
+//     undervoltage_flag[11] = 0;
+//     undervoltage_flag[12] = 0;
+//     undervoltage_flag[13] = 0;
+//     undervoltage_flag[14] = 0;
+//     undervoltage_flag[15] = 0;
 
+//     Serial.println("voltage flags");
+
+//     for(int i = 0; i<=5; i++)
+//         Serial.println(undervoltage_flag[i]);
+
+//     Serial.println("done");
 // }
 
 void flash_leds() { // Flashes each discharge resistor sequentially
@@ -1366,11 +1363,10 @@ void discharge_cells(bool discharge[num_boards][18]) {  // this function takes a
     uint8_t data_arr[num_boards][6];
     uint16_t VUV;
     uint16_t VOV;
-    VUV = UV / (16 * 0.0001) - 1; // Comparison Voltage = (VUV + 1) • 16 • 100μV
-                                  // (pg. 68 in datasheet)
-    VOV = OV / (16 * 0.0001);     // Comparison Voltage = VOV • 16 • 100μV (pg. 68 in
-                                  // datasheet)
-    ////configuration register group A////
+    VUV = UV / (16 * 0.0001) - 1; // Comparison Voltage = (VUV + 1) • 16 • 100μV (pg. 68 in datasheet)
+    VOV = OV / (16 * 0.0001);     // Comparison Voltage = VOV • 16 • 100μV (pg. 68 in datasheet)
+
+    // Configuration register group A
     for (int i = 0; i < num_boards; i++) {
         data[0] = 0b11111100; // GPIO1-5 = 1 (pull-down off), REFON=1, DTEN=0,
                               // ADCOPT=0
@@ -1384,9 +1380,9 @@ void discharge_cells(bool discharge[num_boards][18]) {  // this function takes a
         data[5] = (uint8_t)discharge[i][11] << 3 | discharge[i][10] << 2 | discharge[i][9] << 1 | discharge[i][8] << 0;
         std::copy(data, data + 6, data_arr[i]);
     }
-
     write_register_group(WRCFGA, data_arr);
-    ////configuration register group B/////
+
+    // Configuration register group B
     for (int i = 0; i < num_boards; i++) {
         data[0] = (uint8_t)discharge[i][15] << 7 | discharge[i][14] << 6 | discharge[i][13] << 5 | discharge[i][12] << 4 | 0b1111;
         data[1] = (uint8_t)discharge[i][17] | discharge[i][16];
@@ -1394,7 +1390,6 @@ void discharge_cells(bool discharge[num_boards][18]) {  // this function takes a
         data[3] = (uint8_t)CLEAR_REG;
         data[4] = (uint8_t)CLEAR_REG;
         data[5] = (uint8_t)CLEAR_REG;
-
         std::copy(data, data + 6, data_arr[i]);
     }
     write_register_group(WRCFGB, data_arr);
@@ -1408,7 +1403,7 @@ void myCallback() {
     watchdog_callback = true; // set watchdog callback flag
 }
 
-// Analog Devices provided Functions//
+// Analog Devices provided functions
 
 void wakeup_sleep(uint8_t total_ic) // Number of ICs in the system. This function
                                     // needs some work. Enters Sleep state after 2
