@@ -34,9 +34,10 @@ extern int wire_cut;                        // indicates position of wire break 
 #define MUTE     0b0000000000101000         // Mute Discharge
 #define UNMUTE   0b0000000000101001         // Unmute Discharge
 
-#define ADCV     0b0000001001100000          // Start Cell Voltage ADC Conversion and Poll Status
-#define ADAX     0b0000010010010000          // Start GPIO ADC Conversion and Poll Status
-#define OW       0b0000000010000000          // Open Wire Detection Bit
+#define ADCV     0b0000001001100000         // Start Cell Voltage ADC Conversion and Poll Status
+#define ADAX     0b0000010010010000         // Start GPIO ADC Conversion and Poll Status
+#define OW       0b0000000010000000         // Open Wire Detection Bit
+#define ITEMP    0b0000000001000011         // Die Temperature Bits
 
 // configuration dependent commands 
 //                      0      1      2     3     4     5     6      7

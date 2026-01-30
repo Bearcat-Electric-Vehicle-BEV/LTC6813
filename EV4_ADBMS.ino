@@ -69,8 +69,7 @@ float inv_voltage = 0;
 float cell_voltage[num_boards][num_cells]; // most recent cell voltages
 float open_circuit_voltage[num_boards][num_cells];
 float pack_voltage = 0; // sum of cell voltages
-float cell_temp[num_boards][10];     // most recent cell temperatures. Contains raw voltage data
-                                    // for the duration of open wire checks
+float cell_temp[num_boards][10]; // most recent cell temperatures. Contains raw voltage data for the duration of open wire checks
 float die_temps[num_boards]; // most recent sense board LTC6813 die temps
 
 // sense board flags
@@ -1219,8 +1218,7 @@ CAN_message_t RX_CAN() { // grabs the first message in the FIFO.
         }
         Serial.print('\n');
     }
-    return msg; // always check the ID of the returned message. No messages in
-                // buffer returns 0 ID with 8 byte of zero data
+    return msg; // always check the ID of the returned message. No messages in buffer returns 0 ID with 8 byte of zero data
 }
 
 void configure_sense() {
@@ -1257,8 +1255,8 @@ void configure_sense() {
 //     float max = cell_voltage[0][0];
 
 //     measure_die_temp();
-//     ////mark cells to be discharged////
-//     min_max<num_boards, num_cells>(cell_voltage, &min, &max);
+//     // Mark cells to be discharged
+//     min_max<num_boards, num_cells>(cell_voltage, min, max);
 //     Serial.print("min cell voltage: ");
 //     Serial.println(min);
 //     Serial.print("max cell voltage: ");
@@ -1291,18 +1289,19 @@ void configure_sense() {
 //         balance_threshold = min;
 // }
 
-// void measure_die_temp() {
-//     uint8_t response[num_boards][6];
-//     poll_ADC(ADSTAT);
-//     read_register_group(RDSTATA, response);
-//     Serial.println("die_temps");
+void measure_die_temp() {
+    uint8_t response[num_boards][6];
+    poll_ADC(ADAX | ITEMP);
+    read_register_group(RDSTATA, response);
 
-//     for (int i = 0; i < num_boards; i++) {
-//         die_temps[i] = (response[i][2] | response[i][3] << 8) * (0.0001 / .0076) - 276;
-//         Serial.println(die_temps[i]);
-//     }
-//     Serial.println();
-// }
+    // Serial.println("die_temps");
+    for (int i = 0; i < num_boards; i++) {
+        uint16_t adc_code = (uint16_t)response[i][3] << 8 | response[i][2];
+        die_temps[i] = ((float)adc_code * 0.00015f + 1.5f) / .0075 - 273; // (ITMP * 150uV + 1.5V) / 7.5mV/C - 273C
+        // Serial.println(die_temps[i]);
+    }
+    // Serial.println();
+}
 
 // void sense_status(){
 //     uint8_t response[num_boards][6];
@@ -1357,35 +1356,33 @@ void flash_leds() { // Flashes each discharge resistor sequentially
     }
 }
 
-void discharge_cells(bool discharge[num_boards][18]) {  // this function takes a 2D boolean array
-                                                        // which is NOT dependent on num_cells.
+void discharge_cells(bool discharge[num_boards][18]) {  // this function takes a 2D boolean array which is NOT dependent on num_cells.
     uint8_t data[6];
     uint8_t data_arr[num_boards][6];
     uint16_t VUV;
     uint16_t VOV;
-    VUV = UV / (16 * 0.0001) - 1; // Comparison Voltage = (VUV + 1) • 16 • 100μV (pg. 68 in datasheet)
-    VOV = OV / (16 * 0.0001);     // Comparison Voltage = VOV • 16 • 100μV (pg. 68 in datasheet)
+    VUV = (UV - 1.5f) / (16 * 0.00015f); // Cell undervoltage threshold = VUV * 16 * 150μV + 1.5V
+    VOV = (OV - 1.5f) / (16 * 0.00015f); // Cell overvoltage threshold = VOV * 16 * 150μV + 1.5V
 
     // Configuration register group A
     for (int i = 0; i < num_boards; i++) {
-        data[0] = 0b11111100; // GPIO1-5 = 1 (pull-down off), REFON=1, DTEN=0,
-                              // ADCOPT=0
+        data[0] = 0b11111100; // GPIO1-5 = 1 (pull-down off), REFON=1, DTEN=0, ADCOPT=0
         data[1] = (uint8_t)VUV;
-        data[2] = (uint8_t)(VOV & 0b11110000) | (VUV >> 8 & 0b00001111);
-        data[3] = (uint8_t)VOV >> 4;
+        data[2] = ((uint8_t)VOV << 4) | (VUV >> 8 & 0b00001111);
+        data[3] = (uint8_t)(VOV >> 4);
         data[4] = (uint8_t)discharge[i][7] << 7 | discharge[i][6] << 6 |
                   discharge[i][5] << 5 | discharge[i][4] << 4 |
                   discharge[i][3] << 3 | discharge[i][2] << 2 |
                   discharge[i][1] << 1 | discharge[i][0] << 0;
-        data[5] = (uint8_t)discharge[i][11] << 3 | discharge[i][10] << 2 | discharge[i][9] << 1 | discharge[i][8] << 0;
+        data[5] = (uint8_t)discharge[i][11] << 3 | discharge[i][10] << 2 | discharge[i][9] << 1 | discharge[i][8] << 0; // DCT00..3 = 0
         std::copy(data, data + 6, data_arr[i]);
     }
     write_register_group(WRCFGA, data_arr);
 
     // Configuration register group B
     for (int i = 0; i < num_boards; i++) {
-        data[0] = (uint8_t)discharge[i][15] << 7 | discharge[i][14] << 6 | discharge[i][13] << 5 | discharge[i][12] << 4 | 0b1111;
-        data[1] = (uint8_t)discharge[i][17] | discharge[i][16];
+        data[0] = (uint8_t)discharge[i][15] << 7 | discharge[i][14] << 6 | discharge[i][13] << 5 | discharge[i][12] << 4 | 0b1111; // GPIO6..9 = 0
+        data[1] = (uint8_t)discharge[i][17] << 1 | discharge[i][16] << 0;
         data[2] = (uint8_t)CLEAR_REG;
         data[3] = (uint8_t)CLEAR_REG;
         data[4] = (uint8_t)CLEAR_REG;
