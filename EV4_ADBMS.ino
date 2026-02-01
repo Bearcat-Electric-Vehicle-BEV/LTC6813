@@ -12,13 +12,13 @@
 #include "LUTS.h"
 #include "Watchdog_t4.h"
 
-// CAN pins
-#define CRX3 23
-#define CTX3 22
-#define STBY 21 // CAN Transceiver Standby
-
 // SD card pins
 const int chipSelect = BUILTIN_SDCARD;
+
+// CAN pins
+#define CRX3        23
+#define CTX3        22
+#define STBY        21 // CAN Transceiver Standby
 
 // SPI pins
 #define CS          10      // chip select pin isoSPI
@@ -98,9 +98,7 @@ void setup() {
     sense_watchdog_timer = start_time - 2000;   // initial sense_watchdog timer with expired watchdog time (T - 2000 milliseconds)
 
     Serial.begin(9600);
-    Serial.println("startup");
-    Serial.print("Start Time: ");
-    Serial.println(start_time);
+    println_with_args("Startup/n/tStart Time: %u", start_time);
 
     // Initialize communications
     init_spi(CS, SPI_MODE0); // SPI (isoSPI)
@@ -255,7 +253,8 @@ void init_watchdog() {
     if (watchdog_timeout != 0) { // callback function is having some issues
         WDT_timings_t config;
         int watchdog_trigger = watchdog_timeout - 1;
-        if (watchdog_trigger < 1) watchdog_trigger = 1;
+        if (watchdog_trigger < 1) 
+            watchdog_trigger = 1;
 
         config.trigger = 11; /* in seconds, 0->128 */ // time until watchdog callback function is triggered.
         config.timeout = watchdog_timeout; /* in seconds, 0->128 */ // time until watchdog reset
@@ -315,19 +314,15 @@ void precharge_cycle(CAN_message_t msg, float charger_voltage, float charger_cur
 // Charge cycle loop
 void charge_cycle(CAN_message_t msg, float charger_voltage, float charger_current, uint32_t charge_start_time) {
     while (1) { // charge cycle
-        Serial.print("Time (minutes): ");
-        Serial.println((float)(millis() - charge_start_time) / 60000);
-        Serial.print("charge fault status: ");
-        Serial.println(charger_fault);
+        println_with_args("Time: %f minutes", (float)(millis() - charge_start_time) / 60000);
+        println_with_args("Charge fault status: %f", charger_fault);
 
         measure_voltage();
         measure_temp();
         measure_current();
 
-        Serial.print("current: ");
-        Serial.println(current);
-        Serial.print("Pack Voltage: ");
-        Serial.println(pack_voltage);
+        println_with_args("Current: %f", current);
+        println_with_args("Pack Voltage: %f", pack_voltage);
         print_min_max();
 
         if (!memory_fault) 
@@ -337,10 +332,8 @@ void charge_cycle(CAN_message_t msg, float charger_voltage, float charger_curren
             msg = RX_CAN();
             charger_voltage = ((uint16_t)msg.buf[0] << 8 | (uint16_t)msg.buf[1]) / 10;
             charger_current = ((uint16_t)msg.buf[2] << 8 | (uint16_t)msg.buf[3]) / 10;
-            Serial.print("charger voltage: ");
-            Serial.println(charger_voltage);
-            Serial.print("charger current: ");
-            Serial.println(charger_current);
+            println_with_args("Charger voltage: %f", charger_voltage);
+            println_with_args("Charger current: %f", charger_current);
 
             if ((msg.id == CHG_TX_ID && msg.buf[4] == 0) || true) {
                 charger_enable(false);
@@ -521,14 +514,12 @@ void read_ADC() {
     ADC_A = SPI1.transfer(CLEAR_REG);
     ADC_A = ADC_A << 8;
     ADC_A = ADC_A | SPI1.transfer(CLEAR_REG);
-    Serial.print("ADC_A: ");
-    Serial.println(ADC_A);
+    println_with_args("ADC_A: %u", ADC_A);
 
     ADC_B = SPI1.transfer(CLEAR_REG);
     ADC_B = ADC_B << 8;
     ADC_B = ADC_B | SPI1.transfer(CLEAR_REG);
-    Serial.print("ADC_B: ");
-    Serial.println(ADC_B);
+    println_with_args("ADC_B: %u", ADC_B);
 
     temp = SPI1.transfer(CLEAR_REG);
     Serial.print("temp: ");
@@ -538,10 +529,8 @@ void read_ADC() {
 
     A_volt = (float)(ADC_A) / UINT16_MAX * 5;
     B_volt = (float)(ADC_B) / UINT16_MAX * 5;
-    Serial.print("A Voltage: ");
-    Serial.println(A_volt);
-    Serial.print("B Voltage: ");
-    Serial.println(B_volt);
+    println_with_args("A Voltage: %f", A_volt);
+    println_with_args("B Voltage: %f", B_volt);
 }
 
 void print_min_max() { // This function prints the min and max parameters
@@ -556,18 +545,12 @@ void print_min_max() { // This function prints the min and max parameters
     min_max<num_boards, 10>(cell_temp, min_cell_temp, max_cell_temp);
     min_max<1, num_boards>(&die_temps, min_die_temp, max_die_temp); // This is how you pass a 1D array to the min_max function
 
-    Serial.print("Max cell voltage: ");
-    Serial.println(max_cell_voltage);
-    Serial.print("Min cell_voltage: ");
-    Serial.println(min_cell_voltage);
-    Serial.print("Max cell_temp: ");
-    Serial.println(max_cell_temp);
-    Serial.print("Min cell_temp: ");
-    Serial.println(min_cell_temp);
-    Serial.print("Max die temp: ");
-    Serial.println(max_die_temp);
-    Serial.print("Min die temp: ");
-    Serial.println(min_die_temp);
+    println_with_args("Max cell voltage: %f", max_cell_voltage);
+    println_with_args("Min cell voltage: %f", min_cell_voltage);
+    println_with_args("Max cell temp: %f", max_cell_temp);
+    println_with_args("Min cell temp: %f", min_cell_temp);
+    println_with_args("Max die temp: %f", max_die_temp);
+    println_with_args("Min die temp: %f", min_die_temp);
 }
 
 void dumpDataToSerial() {
@@ -631,11 +614,7 @@ void check_memory() { // this should check all files
     int num_files = 0;
     while (entry) {
         num_files++;
-        Serial.print(entry.name());
-        Serial.print("\t");
-        Serial.print(entry.size());
-        Serial.println(" bytes");
-
+        println_with_args("%s\t%u bytes", entry.name(), entry.size());
         memory_usage += entry.size();
         entry.close();
         // SD.remove(entry.name());
@@ -643,9 +622,7 @@ void check_memory() { // this should check all files
     }
     root.close();
 
-    Serial.print("Memory Usage: ");
-    Serial.print(100 * memory_usage / (SD_card_size * 1e9));
-    Serial.println("%\n");
+    println_with_args("Memory Usage: %f%\n", 100 * memory_usage / (SD_card_size * 1e9));
 
     if (memory_usage > 0.9 * (SD_card_size * 1e9)) {
         Serial.println("SD card over 90% full");
@@ -654,8 +631,7 @@ void check_memory() { // this should check all files
     }
 
     if (data_file_num == 0) {
-        for (int i = 1; i < num_files + 100; i++)
-        {
+        for (int i = 1; i < num_files + 100; i++) {
             String filename = "data" + String(i) + ".csv";
             if (!SD.exists(filename.c_str())) {
                 data_file_num = i;
@@ -688,9 +664,7 @@ void get_SOC() { // SOC should be written in the state.txt file as: "SOC:100"
     }
 }
 
-void map_text2var(String name,
-                  String value)
-{ // map text name and value to a variable
+void map_text2var(String name, String value) { // map text name and value to a variable
     if (name == "SOC:") {
         soc = value.toFloat();
         Serial.println(soc);
@@ -712,8 +686,7 @@ float update_SOC() {
         min_OC_cell_voltage);
     soc = 100 - ((max_capacity - discharged) / max_capacity * 100);
 
-    Serial.print("SOC: ");
-    Serial.println(soc);
+    println_with_args("SOC: %f", soc);
     return soc;
 }
 
@@ -866,8 +839,8 @@ void write_register_group(uint16_t command, uint8_t data[num_boards][6]) {
 
     for (int i = num_boards - 1; i >= 0; i--) {
         data_pec = pec15_calc(6, data[i]);
-        data_pec1 = data_pec >> 0;
         data_pec0 = data_pec >> 8;
+        data_pec1 = data_pec >> 0;
 
         for (int j = 0; j < 6; j++)
             SPI.transfer(data[i][j]);
@@ -935,14 +908,10 @@ void measure_voltage() { // 18 millisecond execution time
 
     if (debug) {
         Serial.println("Voltages:");
-        int g = 0;
         for (int i = 0; i < num_boards; i++) {
-            Serial.print("board: ");
-            Serial.println(i + 1);
+            print_with_args("\tBoard: %d\n\t", i + 1);
             for (int j = 0; j < num_cells; j++) {
-                Serial.print(cell_voltage[i][j]);
-                Serial.print(" ");
-                g++;
+                print_with_args("%f ", cell_voltage[i][j]);
             }
             Serial.println("");
         }
@@ -1001,7 +970,7 @@ void measure_temp(bool open_wire_check) {
     if (debug) {
         Serial.println("Temperatures:");
         for (int i = 0; i < num_boards; i++) {
-            print_with_args("\tboard: %d\n\t", i + 1);
+            print_with_args("\tBoard: %d\n\t", i + 1);
             for (int j = 0; j < 10; j++) {
                 print_with_args("%f ", cell_temp[i][j]);
             }
@@ -1022,8 +991,7 @@ bool reset_watchdog() { // this needs to clear the voltage and temperature measu
             } else {
                 digitalWrite(20, LOW);
                 delay(1000); // delay to overcome debounce of shutdown circuit
-                Serial.println("invalid voltage");
-                Serial.println(cell_voltage[i][j]);
+                println_with_args("Invalid voltage: %f", cell_voltage[i][j]);
                 return false;
             }
         }
@@ -1037,10 +1005,7 @@ bool reset_watchdog() { // this needs to clear the voltage and temperature measu
             } else {
                 digitalWrite(SC, LOW);
                 delay(1000); // delay to overcome debounce of shutdown circuit
-                Serial.print("invalid temp Board:  ");
-                Serial.print(i + 1);
-                Serial.print("Num: ");
-                Serial.println(j + 1);
+                println_with_args("Invalid temp -> Board: %d | Num: %d", i + 1, j + 1);
                 return false;
             }
         }
@@ -1125,20 +1090,16 @@ void TX_CAN() {
     float max_cell_voltage = cell_voltage[0][0];
     float min_cell_temp = cell_temp[0][0];
     float max_cell_temp = cell_temp[0][0];
-    // float min_die_temp = die_temps[0];
-    // float max_die_temp = die_temps[0];
     min_max<num_boards, num_cells>(cell_voltage, min_cell_voltage, max_cell_voltage);
     min_max<num_boards, 10>(cell_temp, min_cell_temp, max_cell_temp);
     uint8_t inst_power_limit = power_limit(max_cell_temp);
-    Serial.print("Power Limit: ");
-    Serial.println(inst_power_limit);
+    println_with_args("Power Limit: %u", inst_power_limit);
 
     digitalWrite(STBY, LOW);
     digitalWrite(CTX3, HIGH);
     delay(1);
 
     CAN_message_t BMS_data;
-    // BMS_data.id = BMS_ID; b
     // BMS_data.id = BMS_ID;
     BMS_data.id = 0x00000007;
     BMS_data.flags.extended = 0;
@@ -1186,8 +1147,6 @@ uint8_t float_2_uint8_t(float float_val, float min, float max) { // float to uin
 }
 
 CAN_message_t RX_CAN() { // grabs the first message in the FIFO.
-    // static int curr_time = 0;
-
     // left bit in charger flag is highest bit (bit 4)
     CAN_message_t msg = {};
     digitalWrite(STBY, LOW);
@@ -1242,8 +1201,7 @@ void balance(bool keep_going) {
     float max = cell_voltage[0][0];
 
     measure_die_temp();
-    // Mark cells to be discharged
-    min_max<num_boards, num_cells>(cell_voltage, min, max);
+    min_max<num_boards, num_cells>(cell_voltage, min, max); // Mark cells to be discharged
     println_with_args("Min cell voltage: %f", min);
     println_with_args("Max cell voltage: %f", max);
 
