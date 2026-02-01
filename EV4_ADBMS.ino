@@ -174,6 +174,8 @@ void loop() {
                      // cause the BMS to enter the charge cycle agian.
 
         precharge_cycle(msg, charger_voltage, charger_current);
+
+        balance_cells(ON);
         
         // 00100 low ac power on charger flag
         delay(1000);    // delay so that another Charger CAN message is sent to the
@@ -192,6 +194,7 @@ void loop() {
 
     case Standby: { // waiting to drive. Still provides rules-compliant monitering in case CAN is lost
         Serial.println("Standby Mode Entered");
+        balance_cells(OFF);
 
         if (!memory_fault) {
             String filename = "data" + String(data_file_num) + ".csv"; // create data file
@@ -205,10 +208,16 @@ void loop() {
 
     case Drive: {
         Serial.println("Drive Mode Entered");
+        balance_cells(OFF);
+
         int time_step = 0; // time step number
         CAN_message_t msg;
-        
         drive(time_step, msg);
+    }
+
+    case Balance: {
+        println_with_args("Balance Mode Entered");
+        balance_cells(ON);
     }
 
     case Debug: 
@@ -283,11 +292,14 @@ bool determineMode(CAN_message_t msg, bool CAN_baud_alt) {
         can.setBaudRate(500000);
         mode = Drive;
         return true;
+    } else if (input == "balance") {
+        mode = Balance;
+        return true;
     } else if (input == "debug") {
         mode = Debug;
         return true;
     }
-
+    
     return false;
 }
 
@@ -370,8 +382,8 @@ void standby() {
         // }
 
         mode = Drive; // Temporary line to bypass precharge check
-
         delay(10);
+        break;
     }
 }
 
@@ -433,14 +445,12 @@ void drive(int t, CAN_message_t msg) {
 
         while (millis() - start_time <= time_buffer[t] + time_step) {} // this needs checked
 
-        if (t < SD_interval - 1) {
+        if (t < SD_interval - 1)
             t++;
-        } else {
+        else
             t = 0;
-        }
 
-        Serial.println("t: ");
-        Serial.println(t);
+        println_with_args("t: %d", t);
     }
 }
 
@@ -1195,8 +1205,14 @@ void configure_sense() {
     write_register_group(WRCFGA, data_arr);
 }
 
-void balance(bool keep_going) {
+void balance_cells(bool set) {
     bool discharge[num_boards][18] = {0}; // '1': needs dischaged, '0': does not need discharged
+
+    if (!set) {
+        discharge_cells(discharge);
+        return;
+    }
+
     float min = cell_voltage[0][0];
     float max = cell_voltage[0][0];
 
@@ -1205,16 +1221,14 @@ void balance(bool keep_going) {
     println_with_args("Min cell voltage: %f", min);
     println_with_args("Max cell voltage: %f", max);
 
-    if (keep_going) {
-        for (int i = 0; i < num_boards; i++) {
-            for (int j = 0; j < num_cells; j++) {
-                discharge[i][j] = cell_voltage[i][j] > min &&
-                                  cell_voltage[i][j] > balance_threshold &&
-                                  die_temps[i] < 60.0f;
-                if (discharge[i][j]) {
-                    println_with_args("Board: %d | Cell: %d | Volt: %f", i + 1, j + 1, cell_voltage[i][j]);
-                    println_with_args("Die temp: %f", die_temps[i]);
-                }
+    for (int i = 0; i < num_boards; i++) {
+        for (int j = 0; j < num_cells; j++) {
+            discharge[i][j] = cell_voltage[i][j] > min &&
+                                cell_voltage[i][j] > balance_threshold &&
+                                die_temps[i] < 60.0f;
+            if (discharge[i][j]) {
+                println_with_args("Board: %d | Cell: %d | Volt: %f", i + 1, j + 1, cell_voltage[i][j]);
+                println_with_args("Die temp: %f", die_temps[i]);
             }
         }
     }

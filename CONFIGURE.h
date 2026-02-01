@@ -18,12 +18,16 @@ const int num_boards = 1;
 const int num_cells = 16;               // cells per board
 const int num_parrallel = 1;
 
+#define OFF 0
+#define ON 1
+
 // BMS operation mode. Leave as Init string to determine mode during runtime
 enum Mode {
     Init, // ""
     Charge,
     Standby,
     Drive,
+    Balance,
     Debug
 };
 
