@@ -31,9 +31,8 @@ const int chipSelect = BUILTIN_SDCARD;
 
 // counters
 unsigned int start_time = millis();
-unsigned int sense_watchdog_timer;  // senseboard watchdog timer. Sense boards will go to
-                                    // sleep after 2 seconds if no valid command with
-                                    // correct PEC is sent from master.
+unsigned int sense_watchdog_timer;  // senseboard watchdog timer. Sense boards will go to sleep after 2s
+                                    // if no valid command with correct PEC is sent from master.
 bool new_voltage = false;
 bool new_temp = false;
 
@@ -50,8 +49,7 @@ bool CHG_EN = 0; // 0: enable charging, 1: disable charging
 
 FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> can; // https://github.com/tonton81/FlexCAN_T4/tree/master
 
-WDT_T4<WDT1> wdt; // watchdog 1 holds output pin low until power-on-reset. This
-                  // is desired for a shutdown circuit
+WDT_T4<WDT1> wdt; // watchdog 1 holds output pin low until power-on-reset. This is desired for a shutdown circuit
 
 float current = 0;
 float current_offset = 0;
@@ -94,12 +92,10 @@ void setup() {
     pinMode(SC, OUTPUT);
     digitalWrite(SC, LOW);
 
-    delay(5000); // startup delay should be use to make it easier to recover the
-                 // teensy when runtime errors occurs
+    delay(5000); // startup delay should be use to make it easier to recover the teensy when runtime errors occurs
 
     // Start timers
-    sense_watchdog_timer = start_time - 2000;   // initial sense_watchdog timer with expired
-                                                // watchdog time (T - 2000 milliseconds)
+    sense_watchdog_timer = start_time - 2000;   // initial sense_watchdog timer with expired watchdog time (T - 2000 milliseconds)
 
     Serial.begin(9600);
     Serial.println("startup");
@@ -120,7 +116,7 @@ void setup() {
     current_offset = current;
 
     // Bring up references on sense boards
-    // configure_sense();
+    configure_sense();
 
     check_memory(); // must be called to use SD card
 
@@ -244,7 +240,7 @@ void init_can() {
     can.setBaudRate(250000);
     can.setMaxMB(3); // number of CAN message mailboxes
     digitalWrite(STBY, LOW);
-    //    https://github.com/tonton81/FlexCAN_T4/blob/master/examples/mailbox_filtering_example_with_interrupts/mailbox_filtering_example_with_interrupts.ino
+    // https://github.com/tonton81/FlexCAN_T4/blob/master/examples/mailbox_filtering_example_with_interrupts/mailbox_filtering_example_with_interrupts.ino
     // Mailboxes must be configured for all messages - both TX and RX
     can.setMB((FLEXCAN_MAILBOX)0, RX, STD); // Standard mailbox for Inverter ID
     can.setMB((FLEXCAN_MAILBOX)1, RX, EXT); // Extended id for charger
@@ -264,7 +260,7 @@ void init_watchdog() {
         config.trigger = 11; /* in seconds, 0->128 */ // time until watchdog callback function is triggered.
         config.timeout = watchdog_timeout; /* in seconds, 0->128 */ // time until watchdog reset
         config.pin = SC; // pin to be driven low upon reset. WDT1 holds low, WDT2 pulses low
-        config.callback = myCallback;
+        config.callback = wdt_callback;
         wdt.begin(config);
     }
 }
@@ -277,12 +273,12 @@ bool determineMode(CAN_message_t msg, bool CAN_baud_alt) {
     if (msg.id == INV_TX_ID && false) { // Always check msg id. Stdby has not yet been tested
         mode = Standby;
         can.setBaudRate(500000);
-        // can.setMBFilter(MB1, 0);  //Disable Charger Mailbox
+        // can.setMBFilter(MB1, 0);  // Disable Charger Mailbox
         return true;
     } else if (msg.id == CHG_TX_ID) {
         mode = Charge;
         can.setBaudRate(250000);
-        // can.setMBFilter(MB0, 0);  //Disable Inverter Mailbox
+        // can.setMBFilter(MB0, 0); // Disable Inverter Mailbox
         return true;
     } else if (current >= 0.5) { // enter directly into drive mode if current is detected
         can.setBaudRate(500000);
@@ -302,8 +298,7 @@ void precharge_cycle(CAN_message_t msg, float charger_voltage, float charger_cur
         measure_voltage();
         measure_temp();
         reset_watchdog();
-        charger_enable(true); // send charge-disable message and clear comm
-                                // fault on charger
+        charger_enable(true); // send charge-disable message and clear comm fault on charger
         msg = RX_CAN();
         charger_voltage = ((uint16_t)msg.buf[0] << 8 | (uint16_t)msg.buf[1]) / 10;
         charger_current = ((uint16_t)msg.buf[2] << 8 | (uint16_t)msg.buf[3]) / 10;
@@ -973,14 +968,6 @@ void measure_temp(bool open_wire_check) {
     uint16_t aux_comm[4] = {RDAUXA, RDAUXB, RDAUXC, RDAUXD}; // read aux registers A through D commands
     int thermistor_idx = 0; // thermistor index 0-9
     int command_idx = 0; // command index within aux_comm array
-    
-    /*
-     * AUX -> ADAX [... 1 0 OW PUP CH[4] 0 1 CH[3] CH[2] CH[1] CH[0]]
-     * AUX2 -> ADAX2
-     * poll with OW (8) set for open_wire
-     * will assume PUP = 1 (pull-up)
-     * will assume 10 thermistors
-     */
 
     if (open_wire_check)
         poll_ADC(ADAX | OW); // initiate and wait for GPIO measurement
@@ -1223,11 +1210,9 @@ CAN_message_t RX_CAN() { // grabs the first message in the FIFO.
 
 void configure_sense() {
     uint8_t data[6];
-    uint8_t data_arr[num_boards][6]; // contains identicle copies of data for each board
-    uint16_t VUV;
-    uint16_t VOV;
-    VUV = UV / (16 * 0.0001) - 1; // Comparison Voltage = (VUV + 1) • 16 • 100μV (pg. 68 in datasheet)
-    VOV = OV / (16 * 0.0001);     // Comparison Voltage = VOV • 16 • 100μV (pg. 68 in datasheet)
+    uint8_t data_arr[num_boards][6]; // contains identical copies of data for each board
+    uint16_t VUV = (UV - 1.5f) / (16 * 0.00015f); // Cell undervoltage threshold = VUV * 16 * 150μV + 1.5V
+    uint16_t VOV = (OV - 1.5f) / (16 * 0.00015f); // Cell overvoltage threshold = VOV * 16 * 150μV + 1.5V
     Serial.println(VUV, BIN);
     Serial.println(VOV, BIN);
 
@@ -1238,9 +1223,11 @@ void configure_sense() {
     data[4] = CLEAR_REG;
     data[5] = CLEAR_REG;
 
-    // data[0] = 0b11111110;     //GPIO1-5 = 1 (pull-down off), REFON=1, DTEN=0,
-    // ADCOPT=0 data[1] = (uint8_t) VUV; data[2] = (uint8_t) (VOV & 0b11110000) |
-    // (VUV>>8 & 0b00001111); data[3] = (uint8_t) VOV>>4; data[4] = 0b11111111;
+    // data[0] = 0b11111110; // GPIO1-5 = 1 (pull-down off), REFON=1, DTEN=0, ADCOPT=0 
+    // data[1] = (uint8_t) VUV; 
+    // data[2] = (uint8_t) (VOV & 0b11110000) | (VUV>>8 & 0b00001111); 
+    // data[3] = (uint8_t) VOV>>4; 
+    // data[4] = 0b11111111;
     // data[5] = 0b11111111;
 
     for (int i = 0; i < num_boards; i++)
@@ -1249,45 +1236,36 @@ void configure_sense() {
     write_register_group(WRCFGA, data_arr);
 }
 
-// void balance(bool keep_going) {
-//     bool discharge[num_boards][18] = {0}; // '1': needs dischaged, '0': does not need discharged
-//     float min = cell_voltage[0][0];
-//     float max = cell_voltage[0][0];
+void balance(bool keep_going) {
+    bool discharge[num_boards][18] = {0}; // '1': needs dischaged, '0': does not need discharged
+    float min = cell_voltage[0][0];
+    float max = cell_voltage[0][0];
 
-//     measure_die_temp();
-//     // Mark cells to be discharged
-//     min_max<num_boards, num_cells>(cell_voltage, min, max);
-//     Serial.print("min cell voltage: ");
-//     Serial.println(min);
-//     Serial.print("max cell voltage: ");
-//     Serial.println(max);
-//     Serial.println("Cells to be discharged");
+    measure_die_temp();
+    // Mark cells to be discharged
+    min_max<num_boards, num_cells>(cell_voltage, min, max);
+    println_with_args("Min cell voltage: %f", min);
+    println_with_args("Max cell voltage: %f", max);
 
-//     if (keep_going) {
-//         for (int i = 0; i < num_boards; i++) {
-//             for (int j = 0; j < num_cells; j++) {
-//                 discharge[i][j] = cell_voltage[i][j] > min &&
-//                                   cell_voltage[i][j] > balance_threshold &&
-//                                   die_temps[i] < 60.0f;
-//                 if (discharge[i][j]) {
-//                     Serial.print("Board: ");
-//                     Serial.print(i + 1);
-//                     Serial.print("  Cell: ");
-//                     Serial.print(j + 1);
-//                     Serial.print(" Volt: ");
-//                     Serial.println(cell_voltage[i][j]);
-//                     Serial.print("die temp: ");
-//                     Serial.println(die_temps[i]);
-//                 }
-//             }
-//         }
-//     }
+    if (keep_going) {
+        for (int i = 0; i < num_boards; i++) {
+            for (int j = 0; j < num_cells; j++) {
+                discharge[i][j] = cell_voltage[i][j] > min &&
+                                  cell_voltage[i][j] > balance_threshold &&
+                                  die_temps[i] < 60.0f;
+                if (discharge[i][j]) {
+                    println_with_args("Board: %d | Cell: %d | Volt: %f", i + 1, j + 1, cell_voltage[i][j]);
+                    println_with_args("Die temp: %f", die_temps[i]);
+                }
+            }
+        }
+    }
 
-//     discharge_cells(discharge);
+    discharge_cells(discharge);
 
-//     if (balance_threshold < min)
-//         balance_threshold = min;
-// }
+    if (balance_threshold < min)
+        balance_threshold = min;
+}
 
 void measure_die_temp() {
     uint8_t response[num_boards][6];
@@ -1297,7 +1275,7 @@ void measure_die_temp() {
     // Serial.println("die_temps");
     for (int i = 0; i < num_boards; i++) {
         uint16_t adc_code = (uint16_t)response[i][3] << 8 | response[i][2];
-        die_temps[i] = ((float)adc_code * 0.00015f + 1.5f) / .0075 - 273; // (ITMP * 150uV + 1.5V) / 7.5mV/C - 273C
+        die_temps[i] = ((float)adc_code * 0.00015f + 1.5f) / .0075f - 273; // (ITMP * 150uV + 1.5V) / 7.5mV/C - 273C
         // Serial.println(die_temps[i]);
     }
     // Serial.println();
@@ -1359,40 +1337,45 @@ void flash_leds() { // Flashes each discharge resistor sequentially
 void discharge_cells(bool discharge[num_boards][18]) {  // this function takes a 2D boolean array which is NOT dependent on num_cells.
     uint8_t data[6];
     uint8_t data_arr[num_boards][6];
-    uint16_t VUV;
-    uint16_t VOV;
-    VUV = (UV - 1.5f) / (16 * 0.00015f); // Cell undervoltage threshold = VUV * 16 * 150μV + 1.5V
-    VOV = (OV - 1.5f) / (16 * 0.00015f); // Cell overvoltage threshold = VOV * 16 * 150μV + 1.5V
+    uint16_t VUV = (UV - 1.5f) / (16 * 0.00015f); // Cell undervoltage threshold = VUV * 16 * 150μV + 1.5V
+    uint16_t VOV = (OV - 1.5f) / (16 * 0.00015f); // Cell overvoltage threshold = VOV * 16 * 150μV + 1.5V
 
     // Configuration register group A
     for (int i = 0; i < num_boards; i++) {
-        data[0] = 0b11111100; // GPIO1-5 = 1 (pull-down off), REFON=1, DTEN=0, ADCOPT=0
-        data[1] = (uint8_t)VUV;
-        data[2] = ((uint8_t)VOV << 4) | (VUV >> 8 & 0b00001111);
-        data[3] = (uint8_t)(VOV >> 4);
-        data[4] = (uint8_t)discharge[i][7] << 7 | discharge[i][6] << 6 |
-                  discharge[i][5] << 5 | discharge[i][4] << 4 |
-                  discharge[i][3] << 3 | discharge[i][2] << 2 |
-                  discharge[i][1] << 1 | discharge[i][0] << 0;
-        data[5] = (uint8_t)discharge[i][11] << 3 | discharge[i][10] << 2 | discharge[i][9] << 1 | discharge[i][8] << 0; // DCT00..3 = 0
-        std::copy(data, data + 6, data_arr[i]);
+        // data[0] = 0b11111100; // GPIO1-5 = 1 (pull-down off), REFON=1, DTEN=0, ADCOPT=0
+        // data[1] = (uint8_t)VUV;
+        // data[2] = ((uint8_t)VOV << 4) | (VUV >> 8 & 0b00001111);
+        // data[3] = (uint8_t)(VOV >> 4);
+        // data[4] = (uint8_t)discharge[i][7] << 7 | discharge[i][6] << 6 |
+        //           discharge[i][5] << 5 | discharge[i][4] << 4 |
+        //           discharge[i][3] << 3 | discharge[i][2] << 2 |
+        //           discharge[i][1] << 1 | discharge[i][0] << 0;
+        // data[5] = (uint8_t)discharge[i][11] << 3 | discharge[i][10] << 2 | discharge[i][9] << 1 | discharge[i][8] << 0; // DCT00..3 = 0
+        // std::copy(data, data + 6, data_arr[i]);
+        // TODO: LOTS OF RANDOM CONFIG BITS, TALK TO MICHAEL TMR FOR MONDAY (MIGHT NOT NEED TO DO ANYTHING HERE)
     }
     write_register_group(WRCFGA, data_arr);
 
     // Configuration register group B
     for (int i = 0; i < num_boards; i++) {
-        data[0] = (uint8_t)discharge[i][15] << 7 | discharge[i][14] << 6 | discharge[i][13] << 5 | discharge[i][12] << 4 | 0b1111; // GPIO6..9 = 0
-        data[1] = (uint8_t)discharge[i][17] << 1 | discharge[i][16] << 0;
-        data[2] = (uint8_t)CLEAR_REG;
+        data[0] = (uint8_t)VUV;
+        data[1] = ((uint8_t)VOV << 4) | (VUV >> 8 & 0b00001111);
+        data[2] = (uint8_t)(VOV >> 4);
         data[3] = (uint8_t)CLEAR_REG;
-        data[4] = (uint8_t)CLEAR_REG;
-        data[5] = (uint8_t)CLEAR_REG;
+        data[4] = (uint8_t)discharge[i][7] << 7 | discharge[i][6] << 6 |
+                  discharge[i][5] << 5 | discharge[i][4] << 4 |
+                  discharge[i][3] << 3 | discharge[i][2] << 2 |
+                  discharge[i][1] << 1 | discharge[i][0] << 0; 
+        data[5] = (uint8_t)discharge[i][15] << 7 | discharge[i][14] << 6 |
+                  discharge[i][13] << 5 | discharge[i][12] << 4 |
+                  discharge[i][11] << 3 | discharge[i][10] << 2 |
+                  discharge[i][9] << 1 | discharge[i][8] << 0;
         std::copy(data, data + 6, data_arr[i]);
     }
     write_register_group(WRCFGB, data_arr);
 }
 
-void myCallback() {
+void wdt_callback() {
     Serial.println("Callback called");
     measure_voltage();
     measure_temp();
@@ -1473,7 +1456,7 @@ uint16_t pec10_calc_data_ccnt(const uint8_t *data6, uint8_t ccnt6) {
 
 void wakeup_idle(uint8_t total_ic) { // idle after 4.3 ms of no isoSPI activity
     // Serial.println("wakeup_idle");
-    for (int i = 0; i < total_ic + 1; i++) { //+1 IC for the LTC6820
+    for (int i = 0; i < total_ic + 1; i++) { // +1 IC for the LTC6820
         digitalWrite(CS, LOW);
         SPI.transfer(FULL_REG); // Guarantees the isoSPI will be in ready mode
         digitalWrite(CS, HIGH);
