@@ -56,6 +56,9 @@ typedef struct Ev4 {
     float GPIO_open_wire[num_boards][10];
     bool overvoltage_flag[18];
     bool undervoltage_flag[18];
+
+    // Ev4 configuration (modifiable attributes)
+    Config_t cfg;
 } Ev4_t;
 
 #endif

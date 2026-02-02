@@ -37,7 +37,7 @@ void measure_voltage(Ev4_t *ctx) { // 18 millisecond execution time
 
     ctx->new_voltage = true;
 
-    if (debug) {
+    if (ctx->cfg.debug) {
         Serial.println("Voltages:");
         for (int i = 0; i < num_boards; i++) {
             print_with_args("\tBoard: %d\n\t", i + 1);
@@ -84,7 +84,7 @@ void measure_temp(Ev4_t *ctx, bool open_wire_check) {
 
     // new_temp = true;
 
-    if (debug) {
+    if (ctx->cfg.debug) {
         Serial.println("Temperatures:");
         for (int i = 0; i < num_boards; i++) {
             print_with_args("\tBoard: %d\n\t", i + 1);
@@ -118,9 +118,11 @@ void measure_current(Ev4_t *ctx) {
         ctx->current = (volt - 2.5) / .004 - ctx->current_offset; // this needs checked
     }
 
-    // if(debug){
-    //   Serial.print("current: "); Serial.println(current);
+    // if(ctx->cfg.debug){
+    //   Serial.print(ctx->current: "); 
+    //   Serial.println(ctx->current);
     // }
+    
     ctx->current_count++;
     digitalWrite(CS1, HIGH);
 }

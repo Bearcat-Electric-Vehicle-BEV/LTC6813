@@ -26,7 +26,7 @@ CAN_message_t Can_Rx(Ev4_t *ctx) { // grabs the first message in the FIFO.
     // bool received = false;
     ctx->can.read(msg);
     // can.readMB(msg);
-    if (msg.id != 0 && debug) {
+    if (msg.id != 0 && ctx->cfg.debug) {
         Serial.print("ID: ");
         Serial.print(msg.id, HEX);
         Serial.println(" Data: ");

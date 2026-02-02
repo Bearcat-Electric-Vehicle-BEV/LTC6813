@@ -45,7 +45,7 @@ void balance_cells(Ev4_t *ctx, bool set) {
     bool discharge[num_boards][18] = {0}; // '1': needs dischaged, '0': does not need discharged
 
     if (!set) {
-        discharge_cells(discharge);
+        discharge_cells(ctx, discharge);
         return;
     }
 
@@ -60,7 +60,7 @@ void balance_cells(Ev4_t *ctx, bool set) {
     for (int i = 0; i < num_boards; i++) {
         for (int j = 0; j < num_cells; j++) {
             discharge[i][j] = ctx->cell_voltage[i][j] > min &&
-                                ctx->cell_voltage[i][j] > balance_threshold &&
+                                ctx->cell_voltage[i][j] > ctx->cfg.balance_threshold &&
                                 ctx->die_temps[i] < 60.0f;
             if (discharge[i][j]) {
                 println_with_args("Board: %d | Cell: %d | Volt: %f", i + 1, j + 1, ctx->cell_voltage[i][j]);
@@ -69,8 +69,8 @@ void balance_cells(Ev4_t *ctx, bool set) {
         }
     }
 
-    discharge_cells(discharge);
+    discharge_cells(ctx, discharge);
 
-    if (balance_threshold < min)
-        balance_threshold = min;
+    if (ctx->cfg.balance_threshold < min)
+        ctx->cfg.balance_threshold = min;
 }
