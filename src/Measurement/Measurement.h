@@ -1,11 +1,11 @@
 #ifndef MEASUREMENT_H
 #define MEASUREMENT_H
 
-#include <CONFIGURE.h>
-#include <COMMANDS.h>
-#include <HEADER.h>
-#include <Ev4/Ev4.h>
-#include <Adc/Adc.h>
+#include "../Utils/Utils.h"
+#include "../Adc/Adc.h"
+#include "../CONFIGURE.h"
+#include "../COMMANDS.h"
+#include "../Ev4/Ev4.h"
 
 void measure_voltage(Ev4_t *ctx);
 void measure_temp(Ev4_t *ctx, bool open_wire_check = false);

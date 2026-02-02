@@ -2,12 +2,14 @@
 #define EV4_H
 
 #include <Watchdog_t4.h>
+#include <FlexCAN_T4.h>
+#include "../CONFIGURE.h"
 
 typedef struct Ev4 {
     FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> can;
     WDT_T4<WDT1> wdt; // watchdog 1 holds output pin low until power-on-reset. This is desired for a shutdown circuit
 
-    Mode mode;
+    uint8_t mode;
 
     float cell_voltage[num_boards][num_cells]; // most recent cell voltages
     float open_circuit_voltage[num_boards][num_cells];
@@ -28,7 +30,7 @@ typedef struct Ev4 {
     // measurement buffers
     unsigned int time_buffer[SD_interval];
     float voltage_buffer[SD_interval / volt_interval][num_boards][num_cells];
-    float temp_buffer[SD_interval / temp_interval][num_boards][9];
+    float temp_buffer[SD_interval / temp_interval][num_boards][10];
     float current_buffer[SD_interval / current_interval];
     float currentbuffer_stat;
 
@@ -51,7 +53,7 @@ typedef struct Ev4 {
     int RMS_Current ;
 
     // sense board flags
-    float GPIO_open_wire[num_boards][9];
+    float GPIO_open_wire[num_boards][10];
     bool overvoltage_flag[18];
     bool undervoltage_flag[18];
 } Ev4_t;

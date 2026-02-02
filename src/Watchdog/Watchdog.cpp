@@ -17,7 +17,7 @@ void Watchdog_Init(Ev4_t *ctx) {
     }
 }
 
-static void Watchdog_CallbackWrapper() {
+void Watchdog_CallbackWrapper() {
     if (wdt_ctx)
         Watchdog_Callback(wdt_ctx);
 }

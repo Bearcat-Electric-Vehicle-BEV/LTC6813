@@ -1,6 +1,6 @@
 #include "Standby.h"
 
-void Standby(Ev4_t *ctx) {
+void Standby_State(Ev4_t *ctx) {
     while (1) {
         Serial.println(ctx->mode);
         CAN_message_t msg;

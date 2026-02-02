@@ -24,6 +24,23 @@ const int num_parrallel = 1;
 #define CLEAR_REG   0b00000000
 #define FULL_REG    0b11111111
 
+// SPI pins
+#define CS          10      // chip select pin isoSPI
+#define CS2         38      // 3nd chip select pin isoSPI
+#define SC          20      // shutdown circuit pin
+
+// CAN pins
+#define CRX3        23
+#define CTX3        22
+#define STBY        21      // CAN Transceiver Standby
+
+#define CS1         0       // chip select for ADC
+
+// CAN Bus Parameters
+const uint16_t BMS_ID = 0x123;                // standard ID of BMS TX messages
+const uint32_t INV_TX_ID = 0x0A7;             // CAN Message ID of message send from inverter of DC Bus Voltage (100 Hz frequency).
+const uint32_t CHG_TX_ID = 0x18FF50E5;        // CAN Message ID of messages sent from charger
+
 // BMS operation mode. Leave as Init string to determine mode during runtime
 enum Mode {
     Init, // ""

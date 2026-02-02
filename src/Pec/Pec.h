@@ -2,7 +2,7 @@
 #define PEC_H
 
 #include <avr/pgmspace.h>
-#include <LUTS.h>
+#include "../LUTS.h"
 
 // Data PEC Calculation from ChatGPT 5.2 - Analog did not provide reference code for the ADBMS6830B
 uint16_t pec10_update_bit(uint16_t rem, uint8_t in_bit);

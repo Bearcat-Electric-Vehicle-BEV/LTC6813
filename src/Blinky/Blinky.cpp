@@ -1,6 +1,4 @@
 #include "Blinky.h"
-#include <CONFIGURE.h>
-#include <Balance/Balance.h>
 
 void flash_leds() {
     int time_on = 1000; // Time each led is on in milliseconds

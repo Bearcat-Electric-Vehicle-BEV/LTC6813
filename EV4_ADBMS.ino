@@ -5,10 +5,10 @@
 #include <cmath>
 #include <string>
 
-#include "COMMANDS.h"
-#include "CONFIGURE.h"
-#include "HEADER.h"
-#include "LUTS.h"
+#include "src/COMMANDS.h"
+#include "src/CONFIGURE.h"
+#include "src/LUTS.h"
+#include "src/Utils/Utils.h"
 
 #include "src/Can/Can.h"
 #include "src/Watchdog/Watchdog.h"
@@ -23,7 +23,7 @@
 #include "src/Drive/Drive.h"
 #include "src/Soc/Soc.h"
 #include "src/Data/Data.h"
-#include "Balance/Balance.h"
+#include "src/Balance/Balance.h"
 
 
 // Holds all globals in the context of EV4
@@ -125,7 +125,7 @@ void loop() {
                         // indicate a charger error)
 
         uint32_t charge_start_time = millis();
-        Charge(&ctx, msg, charger_voltage, charger_current, charge_start_time);
+        Charge_State(&ctx, msg, charger_voltage, charger_current, charge_start_time);
 
         // Charger fault
         while (1) {
@@ -145,7 +145,7 @@ void loop() {
             Sd_DataWrite(&ctx); // write initial conditions to data file once
         }
 
-        Standby(&ctx);
+        Standby_State(&ctx);
     }
 
     case Mode::Drive: {
@@ -154,7 +154,7 @@ void loop() {
 
         int time_step = 0; // time step number
         CAN_message_t msg;
-        Drive(&ctx, time_step, msg);
+        Drive_State(&ctx, time_step, msg);
     }
 
     case Mode::Balance: {

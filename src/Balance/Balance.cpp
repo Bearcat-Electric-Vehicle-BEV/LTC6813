@@ -1,5 +1,4 @@
 #include "Balance.h"
-#include <HEADER.h>
 
 void discharge_cells(Ev4_t *ctx, bool discharge[num_boards][18]) {  // this function takes a 2D boolean array which is NOT dependent on num_cells.
     uint8_t data[6];

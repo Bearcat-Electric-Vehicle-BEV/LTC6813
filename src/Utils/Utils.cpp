@@ -1,13 +1,4 @@
-#ifndef HEADER_H  
-#define HEADER_H
-
-#include <stdint.h>
-#include <cstddef>
-#include <stdarg.h>
-#include "Spi/Spi.h"
-#include "Pec/Pec.h"
-#include "Ev4/Ev4.h"
-#include "Wakeup/Wakeup.h"
+#include "Utils.h"
 
 String format_string(const char* format, va_list args) {
     if (format == NULL)
@@ -77,7 +68,7 @@ template<size_t rows, size_t cols> inline void min_max(const float arr_2D[rows][
 
 // searches a sorted DECREASING list for the nearest element and returns its index, the "lower" flag if set will return the nearest element that is equal or lower
 // online function testbench: https://www.programiz.com/online-compiler/5fkt3FMi4yJhY
-template<size_t length> inline int search(const float arr[length], const float value, bool return_lower = false) {
+template<size_t length> inline int search(const float arr[length], const float value, bool return_lower) {
 if (value >= arr[0]) 
         return (0);
 
@@ -340,5 +331,3 @@ void configure_sense(Ev4_t *ctx) {
 
     write_register_group(ctx, WRCFGA, data_arr);
 }
-
-#endif

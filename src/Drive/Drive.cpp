@@ -1,6 +1,6 @@
 #include "Drive.h"
 
-void Drive(Ev4_t *ctx, int t, CAN_message_t msg) {
+void Drive_State(Ev4_t *ctx, int t, CAN_message_t msg) {
     while (1) {
         ctx->time_buffer[t] = millis() - ctx->start_time;
         if (t % current_interval == 0) {
@@ -38,7 +38,7 @@ void Drive(Ev4_t *ctx, int t, CAN_message_t msg) {
 
         if (t % CAN_interval == 0) {
             Serial.println("Send CAN");
-            update_SOC(ctx);
+            Soc_Update(ctx);
             Can_Tx(ctx);
         }
 
