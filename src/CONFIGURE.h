@@ -21,6 +21,9 @@ const int num_parrallel = 1;
 #define OFF 0
 #define ON 1
 
+#define CLEAR_REG   0b00000000
+#define FULL_REG    0b11111111
+
 // BMS operation mode. Leave as Init string to determine mode during runtime
 enum Mode {
     Init, // ""
@@ -30,13 +33,6 @@ enum Mode {
     Balance,
     Debug
 };
-
-uint8_t mode = Init;
-
-// CAN Bus Parameters
-uint16_t BMS_ID = 0x123;                // standard ID of BMS TX messages
-uint32_t INV_TX_ID = 0x0A7;             // CAN Message ID of message send from inverter of DC Bus Voltage (100 Hz frequency).
-uint32_t CHG_TX_ID = 0x18FF50E5;        // CAN Message ID of messages sent from charger
 
 // Charging parameters
 uint16_t CHG_voltage = 357;
