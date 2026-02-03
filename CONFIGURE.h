@@ -44,7 +44,7 @@ uint16_t CHG_current = 8;
 float _qt = 12.6 * 60;                  // total capacity (coulumbs): total capacity (Ah) * 60s/1hr
 
 // Balancing parameters
-float balance_threshold = 4.2;          // will not balance cells below this threshold (V)
+float balance_threshold = 2.5;          // will not balance cells below this threshold (V)
 float max_difference = 0.3;             // will not continue charging if max-min cell exceeds this threshold
 
 // Sense board parameters
