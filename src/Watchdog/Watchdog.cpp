@@ -4,6 +4,8 @@ static Ev4_t *wdt_ctx = NULL;
 
 void Watchdog_Init(Ev4_t *ctx) {
     if (watchdog_timeout != 0) { // callback function is having some issues
+        wdt_ctx = ctx;
+        
         WDT_timings_t config;
         int watchdog_trigger = watchdog_timeout - 1;
         if (watchdog_trigger < 1) 

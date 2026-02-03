@@ -7,6 +7,6 @@
 #include "../CONFIGURE.h"
 
 void dump_data_to_serial();
-void check_memory(Ev4_t *ctx);
+void check_memory(Ev4_t *ctx); // this should check all files
 
 #endif

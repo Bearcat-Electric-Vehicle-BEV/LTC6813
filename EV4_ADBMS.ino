@@ -63,7 +63,7 @@ void setup() {
     // voltage poll and temperature poll take 16 and 24 milliseconds. The rest of
     // the measure functions only take 1 or two milliseconds
 
-    if (ctx.mode == Init) {
+    if (ctx.mode == Mode::Init) {
         measure_voltage(&ctx);
         measure_current(&ctx);
         Soc_Update(&ctx);

@@ -10,6 +10,6 @@
 
 void Charge_EnableCharger(Ev4_t *ctx, bool enable);
 void Charge_Precharge(Ev4_t *ctx, CAN_message_t msg, float charger_voltage, float charger_current);
-void Charge_State(Ev4_t *ctx, CAN_message_t msg, float charger_voltage, float charger_current, uint32_t charge_start_time);
+void Charge_State(Ev4_t *ctx, CAN_message_t msg, float charger_voltage, float charger_current, uint32_t charge_start_time); // Charge cycle loop
 
 #endif

@@ -1,6 +1,6 @@
 #include "Measurement.h"
 
-void measure_voltage(Ev4_t *ctx) { // 18 millisecond execution time
+void measure_voltage(Ev4_t *ctx) {
     uint8_t response[num_boards][6];
     uint16_t cell_comm[6] = {
         RDCVA, RDCVB, RDCVC,

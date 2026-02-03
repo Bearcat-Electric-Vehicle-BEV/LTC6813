@@ -66,7 +66,7 @@ uint8_t power_limit(const float max_cell_temp) {
     // }
 }
 
-uint8_t float_2_uint8_t(const float float_val, const float min, const float max) { // float to uint8_t, clips values under/over min or max
+uint8_t float_2_uint8_t(const float float_val, const float min, const float max) {
     if (max == min) return (0); // divide by zero
     if (float_val >= max) return max; // overflow
     if (float_val <= min) return min; // underflow
@@ -90,7 +90,7 @@ float map_voltage_to_temp(float V) { // voltage -> actual temp
     return (temperature);
 }
 
-void map_text2var(Ev4_t *ctx, String name, String value) { // map text name and value to a variable
+void map_text2var(Ev4_t *ctx, String name, String value) {
     if (name == "SOC:") {
         ctx->soc = value.toFloat();
         Serial.println(ctx->soc);
@@ -131,7 +131,7 @@ void send_command(Ev4_t *ctx, uint16_t command) {
     SPI.transfer(pec1);
 }
 
-void read_register_group(Ev4_t *ctx, uint16_t command, uint8_t response[num_boards][6]) { // register group is always 6 bytes
+void read_register_group(Ev4_t *ctx, uint16_t command, uint8_t response[num_boards][6]) {
     uint8_t ccmd; // command counter
     uint16_t rx_pec10; // Recieved and parsed 10 bit data PEC
     uint16_t calc_pec10; // Calculated 10 bit data PEC
@@ -192,7 +192,7 @@ void write_register_group(Ev4_t *ctx, uint16_t command, uint8_t data[num_boards]
     digitalWrite(CS, HIGH);
 }
 
-void print_min_max(Ev4_t *ctx) { // This function prints the min and max parameters
+void print_min_max(Ev4_t *ctx) {
     float min_cell_voltage = ctx->cell_voltage[0][0];
     float max_cell_voltage = ctx->cell_voltage[0][0];
     float min_cell_temp = ctx->cell_temp[0][0];
@@ -212,7 +212,6 @@ void print_min_max(Ev4_t *ctx) { // This function prints the min and max paramet
     println_with_args("Min die temp: %f", min_die_temp);
 }
 
-// Determine starting mode (return true to break outer loop)
 bool determineMode(Ev4_t *ctx, CAN_message_t msg, bool CAN_baud_alt) {
     String input = Serial.readStringUntil('\n');
     input.trim();

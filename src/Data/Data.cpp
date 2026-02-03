@@ -43,7 +43,7 @@ void dump_data_to_serial() {
     Serial.println("serial dump done");
 }
 
-void check_memory(Ev4_t *ctx) { // this should check all files
+void check_memory(Ev4_t *ctx) {
     if (!SD.begin(chipSelect)) {
         Serial.println("SD card initialization failed!");
         ctx->memory_fault = 1;

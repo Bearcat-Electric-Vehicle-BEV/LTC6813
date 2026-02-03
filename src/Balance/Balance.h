@@ -6,7 +6,7 @@
 #include "../CONFIGURE.h"
 #include "../Measurement/Measurement.h"
 
-void discharge_cells(bool discharge[num_boards][18]);
+void discharge_cells(bool discharge[num_boards][18]); // this function takes a 2D boolean array which is NOT dependent on num_cells.
 void balance_cells(Ev4_t *ctx, bool set);
 
 #endif

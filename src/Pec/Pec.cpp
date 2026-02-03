@@ -1,6 +1,5 @@
 #include "Pec.h"
 
-// Data PEC Calculation from ChatGPT 5.2 - Analog did not provide reference code for the ADBMS6830B
 uint16_t pec10_update_bit(uint16_t rem, uint8_t in_bit) {
     // CRC10 width=10, poly without x^10 term: x^7 + x^3 + x^2 + x + 1 => 0x08F
     const uint16_t poly = 0x008F;
@@ -15,7 +14,6 @@ uint16_t pec10_update_bit(uint16_t rem, uint8_t in_bit) {
     return rem;
 }
 
-// Computes PEC10 over 6 data bytes + 6 CCNT bits (total 54 bits), MSB-first
 uint16_t pec10_calc_data_ccnt(const uint8_t *data6, uint8_t ccnt6) {
     uint16_t rem = 0x0010; // initial value = 0000010000 :contentReference[oaicite:2]{index=2}
 

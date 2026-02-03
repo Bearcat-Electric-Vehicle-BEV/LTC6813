@@ -8,7 +8,7 @@
 #include "../Measurement/Measurement.h"
 
 void Can_Init(Ev4_t *ctx);
-CAN_message_t Can_Rx(Ev4_t *ctx);
+CAN_message_t Can_Rx(Ev4_t *ctx); // grabs the first message in the FIFO.
 void Can_Tx(Ev4_t *ctx);
 
 #endif

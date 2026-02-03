@@ -1,6 +1,6 @@
 #include "Balance.h"
 
-void discharge_cells(Ev4_t *ctx, bool discharge[num_boards][18]) {  // this function takes a 2D boolean array which is NOT dependent on num_cells.
+void discharge_cells(Ev4_t *ctx, bool discharge[num_boards][18]) {
     uint8_t data[6];
     uint8_t data_arr[num_boards][6];
     uint16_t VUV = (UV - 1.5f) / (16 * 0.00015f); // Cell undervoltage threshold = VUV * 16 * 150μV + 1.5V

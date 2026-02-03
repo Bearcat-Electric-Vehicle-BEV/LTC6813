@@ -50,7 +50,7 @@ typedef struct Ev4 {
     // RMS calc values
     long current_count;
     long current_sum;
-    int RMS_Current ;
+    int RMS_Current;
 
     // sense board flags
     float GPIO_open_wire[num_boards][10];

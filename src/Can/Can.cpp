@@ -19,7 +19,7 @@ void Can_Init(Ev4_t* ctx) {
     can.setMBFilter(MB2, 0x1806E5F4);       // Mailbox for Charger CAN Messages
 }
 
-CAN_message_t Can_Rx(Ev4_t *ctx) { // grabs the first message in the FIFO.
+CAN_message_t Can_Rx(Ev4_t *ctx) {
     // left bit in charger flag is highest bit (bit 4)
     CAN_message_t msg = {};
     digitalWrite(STBY, LOW);

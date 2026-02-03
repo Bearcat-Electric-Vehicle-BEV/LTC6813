@@ -1,6 +1,6 @@
 #include "Soc.h"
 
-void Soc_Get(Ev4_t *ctx) { // SOC should be written in the state.txt file as: "SOC:100"
+void Soc_Get(Ev4_t *ctx) {
     if (SD.exists("state.txt")) {
         File file = SD.open("state.txt", FILE_READ);
         if (file) {

@@ -56,7 +56,6 @@ void Charge_Precharge(Ev4_t *ctx, CAN_message_t msg, float charger_voltage, floa
     }
 }
 
-// Charge cycle loop
 void Charge_State(Ev4_t *ctx, CAN_message_t msg, float charger_voltage, float charger_current, uint32_t charge_start_time) {
     while (1) { // charge cycle
         println_with_args("Time: %f minutes", (float)(millis() - charge_start_time) / 60000);
