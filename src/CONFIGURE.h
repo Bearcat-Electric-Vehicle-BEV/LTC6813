@@ -12,17 +12,17 @@ typedef struct Config {
 } Config_t;
 
 // Safe operating conditions
-const float max_temp = 60;
+const float max_temp = 58;              // 2C max measurement error (due to thermistor + ADBMS6830B)
 const float min_temp = 0;
-const float OV = 4.20;                  // over-voltage limit (spelled with an "oh" not zero) (V)
+const float OV = 4.19;                  // over-voltage limit (spelled with an "oh" not zero) (V)
 const float UV = 2.5;                   // under-voltage limit (V)
 const float max_diff = 1.7;             // max difference between min and max cell for open parallel cell detection
 const int watchdog_timeout = 10;        // watchdog timeout (in seconds). setting to 0 will DISABLE timer. Watchdog timer must be grester thatn 6 secibds
 
 // Architecture
-const int num_boards = 1;
-const int num_cells = 16;               // cells per board
-const int num_parrallel = 1;
+const int num_boards = 10;
+const int num_cells = 14;               // cells per board
+const int num_parrallel = 4;
 
 #define OFF 0
 #define ON 1
@@ -84,3 +84,4 @@ const int ZERO_POWER_TEMP_C = 57;       // Power linearly decreases from full po
 
 
 #endif
+
