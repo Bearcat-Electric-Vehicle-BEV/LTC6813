@@ -56,7 +56,7 @@ void setup() {
     ctx.current_offset = ctx.current;
 
     // Bring up references on sense boards
-    configure_sense(&ctx);
+    // configure_sense(&ctx);
 
     check_memory(&ctx); // must be called to use SD card
 
@@ -160,6 +160,8 @@ void loop() {
     case Mode::Balance: {
         println_with_args("Balance Mode Entered");
         balance_cells(&ctx, ON);
+        while(1)
+            dump_data_to_serial();
     }
 
     case Mode::Debug: 

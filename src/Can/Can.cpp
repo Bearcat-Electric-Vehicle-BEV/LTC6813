@@ -1,22 +1,21 @@
 #include "Can.h"
 
 void Can_Init(Ev4_t* ctx) {
-    FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> can = ctx->can;
     pinMode(CRX3, INPUT);
     pinMode(CTX3, OUTPUT);
     pinMode(STBY, OUTPUT);
-    can.begin();
-    can.setBaudRate(250000);
-    can.setMaxMB(3); // number of CAN message mailboxes
+    ctx->can.begin();
+    ctx->can.setBaudRate(250000);
+    ctx->can.setMaxMB(3); // number of CAN message mailboxes
     digitalWrite(STBY, LOW);
     // https://github.com/tonton81/FlexCAN_T4/blob/master/examples/mailbox_filtering_example_with_interrupts/mailbox_filtering_example_with_interrupts.ino
     // Mailboxes must be configured for all messages - both TX and RX
-    can.setMB((FLEXCAN_MAILBOX)0, RX, STD); // Standard mailbox for Inverter ID
-    can.setMB((FLEXCAN_MAILBOX)1, RX, EXT); // Extended id for charger
-    can.setMB((FLEXCAN_MAILBOX)2, TX, EXT); // BMS TX -> charger id
-    can.setMBFilter(MB0, INV_TX_ID);        // Mailbox for Inverter CAN messages
-    can.setMBFilter(MB1, CHG_TX_ID);        // Mailbox for Charger CAN Messages
-    can.setMBFilter(MB2, 0x1806E5F4);       // Mailbox for Charger CAN Messages
+    ctx->can.setMB((FLEXCAN_MAILBOX)0, RX, STD); // Standard mailbox for Inverter ID
+    ctx->can.setMB((FLEXCAN_MAILBOX)1, RX, EXT); // Extended id for charger
+    ctx->can.setMB((FLEXCAN_MAILBOX)2, TX, EXT); // BMS TX -> charger id
+    ctx->can.setMBFilter(MB0, INV_TX_ID);        // Mailbox for Inverter CAN messages
+    ctx->can.setMBFilter(MB1, CHG_TX_ID);        // Mailbox for Charger CAN Messages
+    ctx->can.setMBFilter(MB2, 0x1806E5F4);       // Mailbox for Charger CAN Messages
 }
 
 CAN_message_t Can_Rx(Ev4_t *ctx) {
