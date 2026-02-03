@@ -58,8 +58,8 @@ enum Mode {
 };
 
 // Charging parameters
-const uint16_t CHG_voltage = 357;
-const uint16_t CHG_current = 8;
+const uint16_t CHG_voltage = 588;
+const uint16_t CHG_current = 4;
 
 // Sense board parameters
 #define wake_delay 2                    // wake delay per board (milliseconds) to bring up power supply to voltage. Depends on Linear voltage regulator capacitance
@@ -81,5 +81,6 @@ const int FULL_POWER_LEVEL_KW = 80;     // Peak Power level
 const int FULL_ENDURANCE_CURRENT = 40;
 const int FULL_POWER_TEMP_C = 55;       // Max temperature that has full power
 const int ZERO_POWER_TEMP_C = 57;       // Power linearly decreases from full power to zero power at this temperature
+
 
 #endif
