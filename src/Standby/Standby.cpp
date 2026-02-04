@@ -1,0 +1,26 @@
+#include "Standby.h"
+
+void Standby_State(Ev4_t *ctx) {
+    while (1) {
+        Serial.println(ctx->mode);
+        CAN_message_t msg;
+        measure_current(ctx);
+        measure_voltage(ctx);
+        measure_temp(ctx);
+        Watchdog_Reset(ctx);
+        msg = Can_Rx(ctx);
+
+        // BYPASSED PRECHARGE CHECK - FIX IN FUTURE BY PULLING DATA FROM ECU
+        // if (msg.id == INV_TX_ID) 
+        //     inv_voltage = float(msg.buf[0] * 256 + msg.buf[1]);
+
+        // if (inv_voltage >= pack_voltage * 0.8) { // checks inverter voltage to see if precharge is occuring
+        //     mode = Drive; // enter drive mode if precharging
+        //     break;
+        // }
+
+        ctx->mode = Mode::Drive; // Temporary line to bypass precharge check
+        delay(10);
+        break;
+    }
+}

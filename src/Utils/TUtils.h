@@ -1,65 +1,7 @@
-#ifndef HEADER_H  
-#define HEADER_H
+#ifndef TUTILS_H
+#define TUTILS_H
 
-#include <stdint.h>
 #include <cstddef>
-#include <stdarg.h>
-
-void measure_temp(bool open_wire_check = false);
-void poll_ADC(uint16_t command, bool curr_measure = false); // curr_measure selects whether a current measurement is taken while polling the ADC (for synchronous Current and voltage measurements to determine cell internal resistance)
-
-String format_string(const char* format, va_list args) {
-    if (format == NULL)
-        return "";
-
-    String result = "";
-    for (int i = 0; format[i] != '\0'; i++) {
-        if (format[i] == '%') {
-            i++;
-            switch (format[i]) {
-            case 'd': // INT
-                result += va_arg(args, int);
-                break;
-            case 'f': // FLOAT OR DOUBLE
-                result += va_arg(args, double);
-                break;
-            case 'c': // CHAR
-                result += (char)va_arg(args, int);
-                break;
-            case 's': // CHAR* (STRING)
-                result += va_arg(args, char*);
-                break;
-            case 'u': // UNSIGNED INT
-                result += va_arg(args, unsigned int);
-                break;
-            default:
-                result += '%';
-                if (format[i] != '\0')
-                    result += format[i];
-                break;
-            }
-        } else {
-            result += format[i];
-        }
-    }
-    return result;
-}
-
-void print_with_args(const char* format, ...) {
-    va_list args;
-    va_start(args, format);
-    String result = format_string(format, args);
-    va_end(args);
-    Serial.print(result);
-}
-
-void println_with_args(const char* format, ...) {
-    va_list args;
-    va_start(args, format);
-    String result = format_string(format, args);
-    va_end(args);
-    Serial.println(result);
-}
 
 // finds the max and min values in any static 2D array of floats, min and max must be initalized to sensible values beforehand
 template<size_t rows, size_t cols> inline void min_max(const float arr_2D[rows][cols], float &min, float &max) {
