@@ -22,7 +22,7 @@ const int watchdog_timeout = 10;        // watchdog timeout (in seconds). settin
 // Architecture
 const int num_boards = 10;
 const int num_cells = 14;               // cells per board
-const int num_parrallel = 4;
+const int num_parallel = 4;
 
 #define OFF 0
 #define ON 1
