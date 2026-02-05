@@ -18,10 +18,9 @@ void Charge_ConfigureCharger(Ev4_t *ctx, bool enable, uint16_t charger_current) 
     digitalWrite(STBY, LOW);
     digitalWrite(CTX3, HIGH);
     delay(1);
+    
     CAN_message_t CHGR_EN;
-    // CHGR_EN.id = 0x1806E5F4;  // Set the CAN message ID     //datasheet
-    CHGR_EN.id = 0x1806E5F4; // Set the CAN message ID     //datasheet
-    // CHGR_EN.id = 0x18FF50E5;  //charger send can id?
+    CHGR_EN.id = 0x1806E5F4; // Set the CAN message ID datasheet
     CHGR_EN.flags.extended = 1;
     CHGR_EN.len = 8; // Set the data length
     // 7FF max CAN ID
