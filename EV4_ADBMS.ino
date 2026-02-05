@@ -103,9 +103,6 @@ void loop() {
     switch (ctx.mode) {
     case Mode::Charge: {
         Serial.println("Charge Mode Entered");
-        CAN_message_t msg;
-        float charger_voltage = 0;
-        float charger_current = 0;
 
         String filename = "data" + String(ctx.data_file_num) + ".csv"; // create data file
         File file = SD.open(filename.c_str(), FILE_WRITE);
@@ -115,7 +112,7 @@ void loop() {
                      // ensuring the charger fully powers down would otherwise can
                      // cause the BMS to enter the charge cycle agian.
 
-        Charge_Precharge(&ctx, msg, charger_voltage, charger_current);
+        Charge_Precharge(&ctx);
 
         balance_cells(&ctx, ON);
         
@@ -125,7 +122,7 @@ void loop() {
                         // indicate a charger error)
 
         uint32_t charge_start_time = millis();
-        Charge_State(&ctx, msg, charger_voltage, charger_current, charge_start_time);
+        Charge_State(&ctx, charge_start_time);
 
         // Charger fault
         while (1) {

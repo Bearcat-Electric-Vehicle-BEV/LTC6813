@@ -59,7 +59,9 @@ enum Mode {
 
 // Charging parameters
 const uint16_t CHG_voltage = 588;
-const uint16_t CHG_current = 4;
+const uint16_t CHG_current_phase1 = 9; // up to 80% SOC
+const uint16_t CHG_current_phase2 = 6; // 80% to 90% SOC
+const uint16_t CHG_current_phase3 = 4; // 90% to 100% SOC
 
 // Sense board parameters
 #define wake_delay 2                    // wake delay per board (milliseconds) to bring up power supply to voltage. Depends on Linear voltage regulator capacitance

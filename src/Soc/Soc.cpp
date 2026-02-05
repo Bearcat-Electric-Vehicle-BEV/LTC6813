@@ -1,6 +1,6 @@
 #include "Soc.h"
 
-void Soc_Get(Ev4_t *ctx) {
+void Soc_Save(Ev4_t *ctx) {
     if (SD.exists("state.txt")) {
         File file = SD.open("state.txt", FILE_READ);
         if (file) {
@@ -23,7 +23,7 @@ void Soc_Get(Ev4_t *ctx) {
     }
 }
 
-float Soc_Update(Ev4_t *ctx) {
+void Soc_Update(Ev4_t *ctx) {
     const int discharge_curve_length = sizeof(discharge_points) / sizeof(discharge_points[0]); // length of each discharge curve
     const float max_capacity = discharge_points[0]; // maximum capacity of a single cell
     // const int num_current_curves = sizeof(discharge_currents) / sizeof(discharge_currents[0]);  // number of discharge curves @ different currents
@@ -39,5 +39,9 @@ float Soc_Update(Ev4_t *ctx) {
     ctx->soc = 100 - ((max_capacity - discharged) / max_capacity * 100);
 
     println_with_args("SOC: %f", ctx->soc);
+}
+
+float Soc_Get(Ev4_t *ctx) {
+    Soc_Update(ctx);
     return ctx->soc;
 }
