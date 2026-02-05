@@ -1,7 +1,7 @@
 #ifndef DRIVE_H
 #define DRIVE_H
 
-#include "../CONFIGURE.h"
+#include "../System/System.h"
 #include "../Soc/Soc.h"
 #include "../Can/Can.h"
 #include "../Watchdog/Watchdog.h"
@@ -9,6 +9,6 @@
 #include "../Ev4/Ev4.h"
 #include "../Measurement/Measurement.h"
 
-void Drive_State(Ev4_t *ctx, int t, CAN_message_t msg);
+void drive_state(ev4_t *ctx, int t, CAN_message_t msg);
 
 #endif

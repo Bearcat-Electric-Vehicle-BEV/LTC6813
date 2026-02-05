@@ -90,14 +90,14 @@ float map_voltage_to_temp(float V) { // voltage -> actual temp
     return (temperature);
 }
 
-void map_text2var(Ev4_t *ctx, String name, String value) {
+void map_text2var(ev4_t *ctx, String name, String value) {
     if (name == "SOC:") {
         ctx->soc = value.toFloat();
         Serial.println(ctx->soc);
     }
 }
 
-void send_command(Ev4_t *ctx, uint16_t command) {
+void send_command(ev4_t *ctx, uint16_t command) {
     uint8_t comm_arr[2];
     uint16_t pec;
     uint8_t pec0;
@@ -109,10 +109,10 @@ void send_command(Ev4_t *ctx, uint16_t command) {
     cmd1 = command >> 0; // lower 8 bits
 
     if (millis() - ctx->sense_watchdog_timer >= 1800) {
-        Wakeup_Sleep(num_boards + 1);
+        wakeup_sleep(NUM_BOARDS + 1);
         ctx->sense_watchdog_timer = millis();
     } else {
-        Wakeup_Idle(num_boards);
+        wakeup_idle(NUM_BOARDS);
         ctx->sense_watchdog_timer = millis();
     }
 
@@ -131,7 +131,7 @@ void send_command(Ev4_t *ctx, uint16_t command) {
     SPI.transfer(pec1);
 }
 
-void read_register_group(Ev4_t *ctx, uint16_t command, uint8_t response[num_boards][6]) {
+void read_register_group(ev4_t *ctx, uint16_t command, uint8_t response[NUM_BOARDS][6]) {
     uint8_t ccmd; // command counter
     uint16_t rx_pec10; // Recieved and parsed 10 bit data PEC
     uint16_t calc_pec10; // Calculated 10 bit data PEC
@@ -140,7 +140,7 @@ void read_register_group(Ev4_t *ctx, uint16_t command, uint8_t response[num_boar
 
     send_command(ctx, command);
 
-    for (int i = 0; i < num_boards; i++) {
+    for (int i = 0; i < NUM_BOARDS; i++) {
         for (int j = 0; j < 6; j++) {
             response[i][j] = SPI.transfer(FULL_REG); // Send dummy byte to receive data
             // Serial.println(response[i][j], BIN);
@@ -158,7 +158,7 @@ void read_register_group(Ev4_t *ctx, uint16_t command, uint8_t response[num_boar
 
         if (rx_pec10 != (calc_pec10 & 0x3FF)) {
             Serial.println("PEC Error - Data PEC Mismatch");
-            Wakeup_Sleep(num_boards + 1);
+            wakeup_sleep(NUM_BOARDS + 1);
         }
     }
 
@@ -171,14 +171,14 @@ void read_register_group(Ev4_t *ctx, uint16_t command, uint8_t response[num_boar
     digitalWrite(CS, HIGH);
 }
 
-void write_register_group(Ev4_t *ctx, uint16_t command, uint8_t data[num_boards][6]) {
+void write_register_group(ev4_t *ctx, uint16_t command, uint8_t data[NUM_BOARDS][6]) {
     uint8_t data_pec0;
     uint8_t data_pec1;
     uint16_t data_pec;
 
     send_command(ctx, command);
 
-    for (int i = num_boards - 1; i >= 0; i--) {
+    for (int i = NUM_BOARDS - 1; i >= 0; i--) {
         data_pec = pec15_calc(6, data[i]);
         data_pec0 = data_pec >> 8;
         data_pec1 = data_pec >> 0;
@@ -192,7 +192,7 @@ void write_register_group(Ev4_t *ctx, uint16_t command, uint8_t data[num_boards]
     digitalWrite(CS, HIGH);
 }
 
-void print_min_max(Ev4_t *ctx) {
+void print_min_max(ev4_t *ctx) {
     float min_cell_voltage = ctx->cell_voltage[0][0];
     float max_cell_voltage = ctx->cell_voltage[0][0];
     float min_cell_temp = ctx->cell_temp[0][0];
@@ -200,9 +200,9 @@ void print_min_max(Ev4_t *ctx) {
     float min_die_temp = ctx->die_temps[0];
     float max_die_temp = ctx->die_temps[0];
 
-    min_max<num_boards, num_cells>(ctx->cell_voltage, min_cell_voltage, max_cell_voltage);
-    min_max<num_boards, 10>(ctx->cell_temp, min_cell_temp, max_cell_temp);
-    min_max<1, num_boards>(&(ctx->die_temps), min_die_temp, max_die_temp); // This is how you pass a 1D array to the min_max function
+    min_max<NUM_BOARDS, NUM_CELLS>(ctx->cell_voltage, min_cell_voltage, max_cell_voltage);
+    min_max<NUM_BOARDS, 10>(ctx->cell_temp, min_cell_temp, max_cell_temp);
+    min_max<1, NUM_BOARDS>(&(ctx->die_temps), min_die_temp, max_die_temp); // This is how you pass a 1D array to the min_max function
 
     println_with_args("Max cell voltage: %f", max_cell_voltage);
     println_with_args("Min cell voltage: %f", min_cell_voltage);
@@ -212,7 +212,7 @@ void print_min_max(Ev4_t *ctx) {
     println_with_args("Min die temp: %f", min_die_temp);
 }
 
-bool determineMode(Ev4_t *ctx, CAN_message_t msg, bool CAN_baud_alt) {
+bool determine_mode(ev4_t *ctx, CAN_message_t msg, bool CAN_baud_alt) {
     String input = Serial.readStringUntil('\n');
     input.trim();
 
@@ -241,9 +241,9 @@ bool determineMode(Ev4_t *ctx, CAN_message_t msg, bool CAN_baud_alt) {
     return false;
 }
 
-void configure_sense(Ev4_t *ctx) {
+void configure_sense(ev4_t *ctx) {
     uint8_t data[6];
-    uint8_t data_arr[num_boards][6]; // contains identical copies of data for each board
+    uint8_t data_arr[NUM_BOARDS][6]; // contains identical copies of data for each board
     uint16_t VUV = (UV - 1.5f) / (16 * 0.00015f); // Cell undervoltage threshold = VUV * 16 * 150μV + 1.5V
     uint16_t VOV = (OV - 1.5f) / (16 * 0.00015f); // Cell overvoltage threshold = VOV * 16 * 150μV + 1.5V
     Serial.println(VUV, BIN);
@@ -263,7 +263,7 @@ void configure_sense(Ev4_t *ctx) {
     // data[4] = 0b11111111;
     // data[5] = 0b11111111;
 
-    for (int i = 0; i < num_boards; i++)
+    for (int i = 0; i < NUM_BOARDS; i++)
         std::copy(data, data + 6, data_arr[i]);
 
     write_register_group(ctx, WRCFGA, data_arr);

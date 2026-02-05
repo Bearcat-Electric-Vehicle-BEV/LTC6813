@@ -11,7 +11,7 @@ void dump_data_to_serial() {
     File entry = root.openNextFile();
     int file_num = 0;
     while (entry) {
-        if (file_num >= file_read_begin) { // begin with file at file_read_begin
+        if (file_num >= FILE_READ_BEGIN) { // begin with file at FILE_READ_BEGIN
             Serial.println(entry.name());
             while (entry.available()) {
                 char character = entry.read();
@@ -43,8 +43,8 @@ void dump_data_to_serial() {
     Serial.println("serial dump done");
 }
 
-void check_memory(Ev4_t *ctx) {
-    if (!SD.begin(chipSelect)) {
+void check_memory(ev4_t *ctx) {
+    if (!SD.begin(CHIP_SELECT)) {
         Serial.println("SD card initialization failed!");
         ctx->memory_fault = 1;
         return;
@@ -69,9 +69,9 @@ void check_memory(Ev4_t *ctx) {
     }
     root.close();
 
-    println_with_args("Memory Usage: %f%\n", 100 * memory_usage / (SD_card_size * 1e9));
+    println_with_args("Memory Usage: %f%\n", 100 * memory_usage / (SD_CARD_SIZE * 1e9));
 
-    if (memory_usage > 0.9 * (SD_card_size * 1e9)) {
+    if (memory_usage > 0.9 * (SD_CARD_SIZE * 1e9)) {
         Serial.println("SD card over 90% full");
         ctx->memory_fault = 1;
         return;

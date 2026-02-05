@@ -1,6 +1,6 @@
 #include "Spi.h"
 
-void Spi_Init(uint8_t pin, uint8_t dataMode) {
+void spi_init(uint8_t pin, uint8_t dataMode) {
     pinMode(pin, OUTPUT);
     digitalWrite(pin, HIGH);
     SPI.begin();

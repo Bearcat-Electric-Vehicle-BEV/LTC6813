@@ -1,6 +1,6 @@
 #include "Soc.h"
 
-void Soc_Save(Ev4_t *ctx) {
+void soc_save(ev4_t *ctx) {
     if (SD.exists("state.txt")) {
         File file = SD.open("state.txt", FILE_READ);
         if (file) {
@@ -23,7 +23,7 @@ void Soc_Save(Ev4_t *ctx) {
     }
 }
 
-void Soc_Update(Ev4_t *ctx) {
+void soc_update(ev4_t *ctx) {
     const int discharge_curve_length = sizeof(discharge_points) / sizeof(discharge_points[0]); // length of each discharge curve
     const float max_capacity = discharge_points[0]; // maximum capacity of a single cell
     // const int num_current_curves = sizeof(discharge_currents) / sizeof(discharge_currents[0]);  // number of discharge curves @ different currents
@@ -31,7 +31,7 @@ void Soc_Update(Ev4_t *ctx) {
                                                             // max values are initalized within the
                                                             // range of the min max values
     float max_OC_cell_voltage = ctx->open_circuit_voltage[0][0];
-    min_max<num_boards, num_cells>(ctx->open_circuit_voltage, min_OC_cell_voltage, max_OC_cell_voltage);
+    min_max<NUM_BOARDS, NUM_CELLS>(ctx->open_circuit_voltage, min_OC_cell_voltage, max_OC_cell_voltage);
     float discharged = interpolate<discharge_curve_length>( // capacity which has already been discharged (mAh)
         discharge_curves[0], 
         discharge_points, 
@@ -41,7 +41,7 @@ void Soc_Update(Ev4_t *ctx) {
     println_with_args("SOC: %f", ctx->soc);
 }
 
-float Soc_Get(Ev4_t *ctx) {
-    Soc_Update(ctx);
+float soc_get(ev4_t *ctx) {
+    soc_update(ctx);
     return ctx->soc;
 }

@@ -3,9 +3,9 @@
 
 #include <cstdint>
 #include "../Spi/Spi.h"
-#include "../CONFIGURE.h"
+#include "../System/System.h"
 
-void Wakeup_Sleep(uint8_t total_ic); 
-void Wakeup_Idle(uint8_t total_ic); // idle after 4.3 ms of no isoSPI activity
+void wakeup_sleep(uint8_t total_ic); 
+void wakeup_idle(uint8_t total_ic); // idle after 4.3 ms of no isoSPI activity
 
 #endif

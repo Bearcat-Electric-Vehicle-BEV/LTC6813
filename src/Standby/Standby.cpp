@@ -1,14 +1,14 @@
 #include "Standby.h"
 
-void Standby_State(Ev4_t *ctx) {
+void standby_state(ev4_t *ctx) {
     while (1) {
         Serial.println(ctx->mode);
         CAN_message_t msg;
         measure_current(ctx);
         measure_voltage(ctx);
         measure_temp(ctx);
-        Watchdog_Reset(ctx);
-        msg = Can_Rx(ctx);
+        watchdog_reset(ctx);
+        msg = can_rx(ctx);
 
         // BYPASSED PRECHARGE CHECK - FIX IN FUTURE BY PULLING DATA FROM ECU
         // if (msg.id == INV_TX_ID) 

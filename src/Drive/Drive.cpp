@@ -1,45 +1,45 @@
 #include "Drive.h"
 
-void Drive_State(Ev4_t *ctx, int t, CAN_message_t msg) {
+void drive_state(ev4_t *ctx, int t, CAN_message_t msg) {
     while (1) {
         ctx->time_buffer[t] = millis() - ctx->start_time;
-        if (t % current_interval == 0) {
+        if (t % CURRENT_INTERVAL == 0) {
             measure_current(ctx);
-            ctx->current_buffer[int(t / current_interval)] = ctx->current;
+            ctx->current_buffer[int(t / CURRENT_INTERVAL)] = ctx->current;
         }
 
-        if (t % volt_interval == 0) {
+        if (t % VOLT_INTERVAL == 0) {
             measure_voltage(ctx);
             Serial.println("New volt");
-            for (int i = 0; i < num_boards; i++) {
-                for (int j = 0; j < num_cells; j++) {
-                    ctx->voltage_buffer[int(t / volt_interval)][i][j] = ctx->cell_voltage[i][j];
+            for (int i = 0; i < NUM_BOARDS; i++) {
+                for (int j = 0; j < NUM_CELLS; j++) {
+                    ctx->voltage_buffer[int(t / VOLT_INTERVAL)][i][j] = ctx->cell_voltage[i][j];
                 }
             }
         }
 
-        if (t % temp_interval == 0) {
+        if (t % TEMP_INTERVAL == 0) {
             Serial.println("New Temp");
             measure_temp(ctx);
-            for (int i = 0; i < num_boards; i++) {
+            for (int i = 0; i < NUM_BOARDS; i++) {
                 for (int j = 0; j < 10; j++) {
-                    ctx->temp_buffer[int(t / temp_interval)][i][j] = ctx->cell_temp[i][j];
+                    ctx->temp_buffer[int(t / TEMP_INTERVAL)][i][j] = ctx->cell_temp[i][j];
                 }
             }
         }
 
         if (ctx->new_voltage && ctx->new_temp) {
             print_min_max(ctx);
-            Watchdog_Reset(ctx);
+            watchdog_reset(ctx);
         }
 
-        if (t % SD_interval == 0 && !ctx->memory_fault) 
-            Sd_DataWrite(ctx);
+        if (t % SD_INTERVAL == 0 && !ctx->memory_fault) 
+            sd_data_write(ctx);
 
-        if (t % CAN_interval == 0) {
+        if (t % CAN_INTERVAL == 0) {
             Serial.println("Send CAN");
-            Soc_Update(ctx);
-            Can_Tx(ctx);
+            soc_update(ctx);
+            can_tx(ctx);
         }
 
         // msg = RX_CAN();
@@ -55,9 +55,9 @@ void Drive_State(Ev4_t *ctx, int t, CAN_message_t msg) {
         //   case RTD is entered agian break;
         // }
 
-        while (millis() - ctx->start_time <= ctx->time_buffer[t] + time_step) {} // this needs checked
+        while (millis() - ctx->start_time <= ctx->time_buffer[t] + TIME_STEP) {} // this needs checked
 
-        if (t < SD_interval - 1)
+        if (t < SD_INTERVAL - 1)
             t++;
         else
             t = 0;

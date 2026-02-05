@@ -57,11 +57,11 @@ SYMBOL TABLE:
 00000000 l    df *ABS*	00000000 LTC6813.ino.cpp
 00000074 l     F .text.itcm	00000014 flexcan_isr_can1()
 00000288 l     F .text.itcm	000000f0 map_temp(float) [clone .part.0]
-00000378 l     F .text.itcm	00000048 FlexCAN_T4<(CAN_DEV_TABLE)1075642368, (FLEXCAN_RXQUEUE_TABLE)256, (FLEXCAN_TXQUEUE_TABLE)16>::mailboxOffset() [clone .part.0]
-000005c8 l     F .text.itcm	00000104 FlexCAN_T4<(CAN_DEV_TABLE)1075642368, (FLEXCAN_RXQUEUE_TABLE)256, (FLEXCAN_TXQUEUE_TABLE)16>::setMBFilter(FLEXCAN_MAILBOX, unsigned long) [clone .isra.0]
+00000378 l     F .text.itcm	00000048 FlexCAN_T4<(CAN_DEV_TABLE)1075642368, (FLEXcan_rxQUEUE_TABLE)256, (FLEXcan_txQUEUE_TABLE)16>::mailboxOffset() [clone .part.0]
+000005c8 l     F .text.itcm	00000104 FlexCAN_T4<(CAN_DEV_TABLE)1075642368, (FLEXcan_rxQUEUE_TABLE)256, (FLEXcan_txQUEUE_TABLE)16>::setMBFilter(FLEXCAN_MAILBOX, unsigned long) [clone .isra.0]
 00000bb0 l     F .text.itcm	0000003c watchdog1_isr()
-00000c34 l     F .text.itcm	0000019c FlexCAN_T4<(CAN_DEV_TABLE)1075642368, (FLEXCAN_RXQUEUE_TABLE)256, (FLEXCAN_TXQUEUE_TABLE)16>::enableFIFO(bool) [clone .isra.0]
-00000e60 l     F .text.itcm	0000011c FlexCAN_T4<(CAN_DEV_TABLE)1075642368, (FLEXCAN_RXQUEUE_TABLE)256, (FLEXCAN_TXQUEUE_TABLE)16>::setMB(FLEXCAN_MAILBOX const&, FLEXCAN_RXTX const&, FLEXCAN_IDE const&) [clone .isra.0]
+00000c34 l     F .text.itcm	0000019c FlexCAN_T4<(CAN_DEV_TABLE)1075642368, (FLEXcan_rxQUEUE_TABLE)256, (FLEXcan_txQUEUE_TABLE)16>::enableFIFO(bool) [clone .isra.0]
+00000e60 l     F .text.itcm	0000011c FlexCAN_T4<(CAN_DEV_TABLE)1075642368, (FLEXcan_rxQUEUE_TABLE)256, (FLEXcan_txQUEUE_TABLE)16>::setMB(FLEXCAN_MAILBOX const&, FLEXcan_rxTX const&, FLEXCAN_IDE const&) [clone .isra.0]
 00005c8c l     F .text.itcm	000000a8 _GLOBAL__sub_I_debug
 20002968 l     O .bss	00000004 _CAN1
 2000296c l     O .bss	00000004 _WDT1
@@ -123,7 +123,7 @@ SYMBOL TABLE:
 20007986 l     O .bss	00000001 m_dmaBusy
 2000299c l     O .bss	00000004 m_irqstat
 20001ff6 l     O .data	00000001 m_errorCode
-00000000 l    df *ABS*	00000000 SdSpiChipSelect.cpp
+00000000 l    df *ABS*	00000000 SdSpiCHIP_SELECT.cpp
 00000000 l    df *ABS*	00000000 SdSpiTeensy3.cpp
 00000000 l    df *ABS*	00000000 FsCache.cpp
 00000000 l    df *ABS*	00000000 FsDateTime.cpp
@@ -221,19 +221,19 @@ SYMBOL TABLE:
 60001e78 l     F .text.code	00000008 ____libc_init_array_veneer
 00011c90 l     F .text.itcm	00000008 ___reboot_Teensyduino__veneer
 00011c98 l     F .text.itcm	00000008 ___init_veneer
-00005418  w    F .text.itcm	00000670 FlexCAN_T4<(CAN_DEV_TABLE)1075642368, (FLEXCAN_RXQUEUE_TABLE)256, (FLEXCAN_TXQUEUE_TABLE)16>::flexcan_interrupt()
+00005418  w    F .text.itcm	00000670 FlexCAN_T4<(CAN_DEV_TABLE)1075642368, (FLEXcan_rxQUEUE_TABLE)256, (FLEXcan_txQUEUE_TABLE)16>::flexcan_interrupt()
 000004e8  w    F .text.itcm	0000006e SDFile::getModifyTime(DateTimeFields&)
 0000d9ac g     F .text.itcm	000000b8 toUpcase(unsigned short)
 0000fb98 g     F .text.itcm	00000018 usb_serial_available
 000117bc g     F .text.itcm	000000ba strcpy
 0000e208 g     F .text.itcm	0000002c String::String(int, unsigned char)
 0000aa94 g     F .text.itcm	00000034 FatPartition::freeClusterCount_cb_fat16(unsigned long, unsigned char*, void*)
-0000009c  w    F .text.itcm	0000017c FlexCAN_T4<(CAN_DEV_TABLE)1075642368, (FLEXCAN_RXQUEUE_TABLE)256, (FLEXCAN_TXQUEUE_TABLE)16>::setBaudRate(unsigned long, FLEXCAN_RXTX)
+0000009c  w    F .text.itcm	0000017c FlexCAN_T4<(CAN_DEV_TABLE)1075642368, (FLEXcan_rxQUEUE_TABLE)256, (FLEXcan_txQUEUE_TABLE)16>::setBaudRate(unsigned long, FLEXcan_rxTX)
 6000167c g     F .text.code	00000002 startup_default_late_hook
 0000ccec g     F .text.itcm	00000088 SdioCard::readSectors(unsigned long, unsigned char*, unsigned int)
 0000fd68  w    F .text.itcm	000000d8 yield
 0000b4a0  w    F .text.itcm	0000000e DedicatedSpiCard::~DedicatedSpiCard()
-200010dc  w    O .data	00000024 vtable for FlexCAN_T4<(CAN_DEV_TABLE)1075642368, (FLEXCAN_RXQUEUE_TABLE)256, (FLEXCAN_TXQUEUE_TABLE)16>
+200010dc  w    O .data	00000024 vtable for FlexCAN_T4<(CAN_DEV_TABLE)1075642368, (FLEXcan_rxQUEUE_TABLE)256, (FLEXcan_txQUEUE_TABLE)16>
 20005edc g     O .bss	00000004 usb_timer1_callback
 00000218  w    F .text.itcm	00000020 WDT_T4<(WDT_DEV_TABLE)1074495488>::watchdog_isr()
 0000987c g     F .text.itcm	000001b4 FatFile::write(void const*, unsigned int)
@@ -242,7 +242,7 @@ SYMBOL TABLE:
 60001794 g     F .text.code	00000384 configure_external_ram
 0000b420  w    F .text.itcm	00000004 DedicatedSpiCard::isDedicatedSpi()
 00009808 g     F .text.itcm	00000074 FatFile::truncate()
-00004134  w    F .text.itcm	00000134 FlexCAN_T4<(CAN_DEV_TABLE)1075642368, (FLEXCAN_RXQUEUE_TABLE)256, (FLEXCAN_TXQUEUE_TABLE)16>::struct2queueRx(CAN_message_t const&)
+00004134  w    F .text.itcm	00000134 FlexCAN_T4<(CAN_DEV_TABLE)1075642368, (FLEXcan_rxQUEUE_TABLE)256, (FLEXcan_txQUEUE_TABLE)16>::struct2queueRx(CAN_message_t const&)
 0000a2a8  w    F .text.itcm	0000003a FsBlockDeviceInterface::writeSectorsCallback(unsigned long, unsigned int, unsigned char const* (*)(unsigned long, void*), void*)
 000103a8 g     F .text.itcm	0000005a .hidden __floatdidf
 00009c10 g     F .text.itcm	00000168 FatFile::makeSFN(FatLfn_t*)
@@ -261,7 +261,7 @@ SYMBOL TABLE:
 00000558  w    F .text.itcm	0000006e SDFile::getCreateTime(DateTimeFields&)
 0000e0b4 g     F .text.itcm	00000068 random(long, long)
 00010cb8 g     F .text.itcm	0000000c __malloc_unlock
-00003998  w    F .text.itcm	000000c6 FlexCAN_T4<(CAN_DEV_TABLE)1075642368, (FLEXCAN_RXQUEUE_TABLE)256, (FLEXCAN_TXQUEUE_TABLE)16>::struct2queueTx(CAN_message_t const&)
+00003998  w    F .text.itcm	000000c6 FlexCAN_T4<(CAN_DEV_TABLE)1075642368, (FLEXcan_rxQUEUE_TABLE)256, (FLEXcan_txQUEUE_TABLE)16>::struct2queueTx(CAN_message_t const&)
 00000864  w    F .text.itcm	000000b0 SDFile::openNextFile(unsigned char)
 200029dc g     O .bss	00000004 FsVolume::m_cwv
 00008e88 g     F .text.itcm	00000104 FatFile::open(FatFile*, char const*, int)
@@ -269,7 +269,7 @@ SYMBOL TABLE:
 0000b414  w    F .text.itcm	00000004 SharedSpiCard::errorData() const
 60001de0 g     F .text.code	00000054 analog_init
 00008bf0 g     F .text.itcm	00000020 FatFile::getCreateDateTime(unsigned short*, unsigned short*)
-00005a88  w    F .text.itcm	00000204 FlexCAN_T4<(CAN_DEV_TABLE)1075642368, (FLEXCAN_RXQUEUE_TABLE)256, (FLEXCAN_TXQUEUE_TABLE)16>::events()
+00005a88  w    F .text.itcm	00000204 FlexCAN_T4<(CAN_DEV_TABLE)1075642368, (FLEXcan_rxQUEUE_TABLE)256, (FLEXcan_txQUEUE_TABLE)16>::events()
 0000ba50 g     F .text.itcm	00000076 SharedSpiCard::readOCR(unsigned long*)
 00001308 g     F .text.itcm	000001b8 print_min_max()
 0000e388 g     F .text.itcm	00000058 String::trim()
@@ -282,7 +282,7 @@ SYMBOL TABLE:
 00011cac g       .ARM.exidx	00000000 __exidx_end
 000028b0 g     F .text.itcm	00000644 SD_data_write()
 0000ade4 g     F .text.itcm	00000056 FatPartition::freeChain(unsigned long)
-200059ec g     O .bss	00000004 file_read_begin
+200059ec g     O .bss	00000004 FILE_READ_BEGIN
 20007987 g     O .bss	00000001 EventResponder::runningFromYield
 0000d610 g     F .text.itcm	00000016 SdSpiArduinoDriver::receive()
 0000b2fc g     F .text.itcm	000000e4 FsVolume::begin(FsBlockDeviceInterface*, bool, unsigned char)
@@ -352,7 +352,7 @@ SYMBOL TABLE:
 0000b408  w    F .text.itcm	00000006 SdCardInterface::status()
 0000ffb0 g     F .text.itcm	0000004c sm_align_pool
 60000000 g     O .text.headers	00000200 FlexSPI_NOR_Config
-0000025c  w    F .text.itcm	00000004 FlexCAN_T4<(CAN_DEV_TABLE)1075642368, (FLEXCAN_RXQUEUE_TABLE)256, (FLEXCAN_TXQUEUE_TABLE)16>::getFirstTxBoxSize()
+0000025c  w    F .text.itcm	00000004 FlexCAN_T4<(CAN_DEV_TABLE)1075642368, (FLEXcan_rxQUEUE_TABLE)256, (FLEXcan_txQUEUE_TABLE)16>::getFirstTxBoxSize()
 0000d33c g     F .text.itcm	00000030 SdioCard::syncDevice()
 0000c578 g     F .text.itcm	000000b4 SdioCard::writeData(unsigned char const*)
 00000a94  w    F .text.itcm	0000004c StreamFile<FsBaseFile, unsigned long long>::available()
@@ -367,7 +367,7 @@ SYMBOL TABLE:
 60001ca4 g     F .text.code	000000e8 usb_init
 0000e208 g     F .text.itcm	0000002c String::String(int, unsigned char)
 0000b410  w    F .text.itcm	00000004 SharedSpiCard::errorCode() const
-00003790  w    F .text.itcm	00000188 FlexCAN_T4<(CAN_DEV_TABLE)1075642368, (FLEXCAN_RXQUEUE_TABLE)256, (FLEXCAN_TXQUEUE_TABLE)16>::begin()
+00003790  w    F .text.itcm	00000188 FlexCAN_T4<(CAN_DEV_TABLE)1075642368, (FLEXcan_rxQUEUE_TABLE)256, (FLEXcan_txQUEUE_TABLE)16>::begin()
 00000dd0  w    F .text.itcm	0000008e SDFile::seek(unsigned long long, int)
 20002bb4 g     O .bss	00000004 __malloc_top_pad
 20001b0c g     O .data	00000050 SPI1
@@ -445,7 +445,7 @@ aaaaaabf g       *ABS*	00000000 _flexram_bank_config
 60001e34 g     F .text.code	00000000 _init
 0000f970 g     F .text.itcm	00000002 usb_serial_reset
 00008b5c g     F .text.itcm	0000001e FatFile::cacheDirEntry(unsigned char)
-00000254  w    F .text.itcm	00000004 FlexCAN_T4<(CAN_DEV_TABLE)1075642368, (FLEXCAN_RXQUEUE_TABLE)256, (FLEXCAN_TXQUEUE_TABLE)16>::write(CANFD_message_t const&)
+00000254  w    F .text.itcm	00000004 FlexCAN_T4<(CAN_DEV_TABLE)1075642368, (FLEXcan_rxQUEUE_TABLE)256, (FLEXcan_txQUEUE_TABLE)16>::write(CANFD_message_t const&)
 0000e190 g     F .text.itcm	0000000e String::~String()
 000063f0  w    F .text.itcm	00000054 SDClass::remove(char const*)
 00000260  w    F .text.itcm	00000028 SDFile::close()
@@ -485,7 +485,7 @@ aaaaaabf g       *ABS*	00000000 _flexram_bank_config
 60001b18 g     F .text.code	0000005c usb_pll_start
 00009434 g     F .text.itcm	00000090 FatFile::rmdir()
 00010398 g     F .text.itcm	0000006a .hidden __aeabi_ul2d
-0000401c  w    F .text.itcm	000000ca FlexCAN_T4<(CAN_DEV_TABLE)1075642368, (FLEXCAN_RXQUEUE_TABLE)256, (FLEXCAN_TXQUEUE_TABLE)16>::filter_match(FLEXCAN_MAILBOX, unsigned long)
+0000401c  w    F .text.itcm	000000ca FlexCAN_T4<(CAN_DEV_TABLE)1075642368, (FLEXcan_rxQUEUE_TABLE)256, (FLEXcan_txQUEUE_TABLE)16>::filter_match(FLEXCAN_MAILBOX, unsigned long)
 0000ad04 g     F .text.itcm	0000009a FatPartition::allocateCluster(unsigned long, unsigned long*)
 0000c1a0  w    F .text.itcm	00000002 SdioCard::end()
 00006480  w    F .text.itcm	00000036 SDClass::exists(char const*)
@@ -578,9 +578,9 @@ aaaaaabf g       *ABS*	00000000 _flexram_bank_config
 20007991 g     O .bss	00000001 new_temp
 000106fc  w    F .text.itcm	00000002 .hidden __aeabi_ldiv0
 00007344 g     F .text.itcm	0000005e ExFatFile::rmdir()
-00004268  w    F .text.itcm	00000280 FlexCAN_T4<(CAN_DEV_TABLE)1075642368, (FLEXCAN_RXQUEUE_TABLE)256, (FLEXCAN_TXQUEUE_TABLE)16>::frame_distribution(CAN_message_t&)
+00004268  w    F .text.itcm	00000280 FlexCAN_T4<(CAN_DEV_TABLE)1075642368, (FLEXcan_rxQUEUE_TABLE)256, (FLEXcan_txQUEUE_TABLE)16>::frame_distribution(CAN_message_t&)
 0000bbd8 g     F .text.itcm	00000068 SharedSpiCard::readStart(unsigned long)
-00003a60  w    F .text.itcm	00000128 FlexCAN_T4<(CAN_DEV_TABLE)1075642368, (FLEXCAN_RXQUEUE_TABLE)256, (FLEXCAN_TXQUEUE_TABLE)16>::write(CAN_message_t const&)
+00003a60  w    F .text.itcm	00000128 FlexCAN_T4<(CAN_DEV_TABLE)1075642368, (FLEXcan_rxQUEUE_TABLE)256, (FLEXcan_txQUEUE_TABLE)16>::write(CAN_message_t const&)
 20002cf0 g     O .bss	00002918 can
 20001b78 g     O .data	00000408 __malloc_av_
 200029e8 g     O .bss	00000004 __atexit
@@ -598,7 +598,7 @@ aaaaaabf g       *ABS*	00000000 _flexram_bank_config
 000110b4 g     F .text.itcm	0000009c __utoa
 00009e2c g     F .text.itcm	00000298 FatFile::open(FatFile*, FatLfn_t*, int)
 200059f0 g     O .bss	00000004 inv_voltage
-200029e4  w    O .bss	00000004 FlexCAN_T4<(CAN_DEV_TABLE)1075642368, (FLEXCAN_RXQUEUE_TABLE)256, (FLEXCAN_TXQUEUE_TABLE)16>::flexcan_interrupt()::last_esr1
+200029e4  w    O .bss	00000004 FlexCAN_T4<(CAN_DEV_TABLE)1075642368, (FLEXcan_rxQUEUE_TABLE)256, (FLEXcan_txQUEUE_TABLE)16>::flexcan_interrupt()::last_esr1
 2000799e g     O .bss	00000001 yield_active_check_flags
 000074dc g     F .text.itcm	0000005e ExFatFile::sync()
 000114d0 g     F .text.itcm	00000002 __retarget_lock_acquire_recursive
@@ -645,7 +645,7 @@ aaaaaabf g       *ABS*	00000000 _flexram_bank_config
 20000000 g     O .data	00000280 endpoint_queue_head
 60001e8c  w    O .text.progmem	00000016 usb_string_product_name
 0000e6d0 g     F .text.itcm	000000a8 delay
-00003f2c  w    F .text.itcm	000000f0 FlexCAN_T4<(CAN_DEV_TABLE)1075642368, (FLEXCAN_RXQUEUE_TABLE)256, (FLEXCAN_TXQUEUE_TABLE)16>::fifo_filter_match(unsigned long)
+00003f2c  w    F .text.itcm	000000f0 FlexCAN_T4<(CAN_DEV_TABLE)1075642368, (FLEXcan_rxQUEUE_TABLE)256, (FLEXcan_txQUEUE_TABLE)16>::fifo_filter_match(unsigned long)
 00006998 g     F .text.itcm	00000022 ExFatFile::getModifyDateTime(unsigned short*, unsigned short*)
 00011ca0 g     F .fini	00000000 _fini
 0000e234 g     F .text.itcm	00000022 String::operator=(char const*)
@@ -657,7 +657,7 @@ aaaaaabf g       *ABS*	00000000 _flexram_bank_config
 00008b7c g     F .text.itcm	0000001e FatFile::close()
 0000ec4c g     F .text.itcm	00000004 Panic_Temp_isr
 00000bec  w    F .text.itcm	00000048 SDFile::~SDFile()
-00003918  w    F .text.itcm	00000080 FlexCAN_T4<(CAN_DEV_TABLE)1075642368, (FLEXCAN_RXQUEUE_TABLE)256, (FLEXCAN_TXQUEUE_TABLE)16>::writeTxMailbox(unsigned char, CAN_message_t const&)
+00003918  w    F .text.itcm	00000080 FlexCAN_T4<(CAN_DEV_TABLE)1075642368, (FLEXcan_rxQUEUE_TABLE)256, (FLEXcan_txQUEUE_TABLE)16>::writeTxMailbox(unsigned char, CAN_message_t const&)
 00008c30 g     F .text.itcm	0000016a FatFile::mkdir(FatFile*, FatLfn_t*)
 0000c330  w    F .text.itcm	00000002 SdioCard::~SdioCard()
 00000914  w    F .text.itcm	00000018 StreamFile<FsBaseFile, unsigned long long>::peek()
@@ -720,7 +720,7 @@ aaaaaabf g       *ABS*	00000000 _flexram_bank_config
 0000dee4 g     F .text.itcm	00000078 Stream::readStringUntil(char, unsigned int)
 20001f84 g     O .data	00000004 __malloc_trim_threshold
 0000dee0  w    F .text.itcm	00000004 usb_serial_class::peek()
-000040e8  w    F .text.itcm	0000004a FlexCAN_T4<(CAN_DEV_TABLE)1075642368, (FLEXCAN_RXQUEUE_TABLE)256, (FLEXCAN_TXQUEUE_TABLE)16>::mbCallbacks(FLEXCAN_MAILBOX const&, CAN_message_t const&)
+000040e8  w    F .text.itcm	0000004a FlexCAN_T4<(CAN_DEV_TABLE)1075642368, (FLEXcan_rxQUEUE_TABLE)256, (FLEXcan_txQUEUE_TABLE)16>::mbCallbacks(FLEXCAN_MAILBOX const&, CAN_message_t const&)
 20005814 g     O .bss	00000190 current_buffer
 0000c19c  w    F .text.itcm	00000004 SdCardInterface::setDedicatedSpi(bool)
 000010d4  w    F .text.itcm	00000110 SPIClass::beginTransaction(SPISettings)
@@ -738,9 +738,9 @@ aaaaaabf g       *ABS*	00000000 _flexram_bank_config
 00003120 g     F .text.itcm	00000144 reset_watchdog()
 60001e80 g       .text.code	00000000 __init_array_start
 000106fc  w    F .text.itcm	00000002 .hidden __aeabi_idiv0
-00000258  w    F .text.itcm	00000004 FlexCAN_T4<(CAN_DEV_TABLE)1075642368, (FLEXCAN_RXQUEUE_TABLE)256, (FLEXCAN_TXQUEUE_TABLE)16>::isFD()
+00000258  w    F .text.itcm	00000004 FlexCAN_T4<(CAN_DEV_TABLE)1075642368, (FLEXcan_rxQUEUE_TABLE)256, (FLEXcan_txQUEUE_TABLE)16>::isFD()
 20001aac g     O .data	00000004 F_BUS_ACTUAL
-20001ab8 g     O .data	00000004 SD_card_size
+20001ab8 g     O .data	00000004 SD_CARD_SIZE
 00007cf4 g     F .text.itcm	00000040 ExFatFormatter::writeUpcaseByte(unsigned char)
 00003020 g     F .text.itcm	00000100 read_register_group(unsigned short, unsigned char (*) [6])
 0000638c  w    F .text.itcm	00000064 SDClass::rename(char const*, char const*)
