@@ -3,21 +3,21 @@
 
 #include <Watchdog_t4.h>
 #include <FlexCAN_T4.h>
-#include "../CONFIGURE.h"
+#include "../System/System.h"
 
-typedef struct Ev4 {
+typedef struct ev4_t {
     FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> can;
     WDT_T4<WDT1> wdt; // watchdog 1 holds output pin low until power-on-reset. This is desired for a shutdown circuit
 
     uint8_t mode;
 
-    float cell_voltage[num_boards][num_cells]; // most recent cell voltages
-    float open_circuit_voltage[num_boards][num_cells];
+    float cell_voltage[NUM_BOARDS][NUM_CELLS]; // most recent cell voltages
+    float open_circuit_voltage[NUM_BOARDS][NUM_CELLS];
     float pack_voltage; // sum of cell voltages
     bool new_voltage;
 
-    float cell_temp[num_boards][10]; // most recent cell temperatures. Contains raw voltage data for the duration of open wire checks
-    float die_temps[num_boards]; // most recent sense board LTC6813 die temps
+    float cell_temp[NUM_BOARDS][10]; // most recent cell temperatures. Contains raw voltage data for the duration of open wire checks
+    float die_temps[NUM_BOARDS]; // most recent sense board LTC6813 die temps
     bool new_temp;
 
     float current;
@@ -28,10 +28,10 @@ typedef struct Ev4 {
     int data_file_num; // data.csv enumeration
 
     // measurement buffers
-    unsigned int time_buffer[SD_interval];
-    float voltage_buffer[SD_interval / volt_interval][num_boards][num_cells];
-    float temp_buffer[SD_interval / temp_interval][num_boards][10];
-    float current_buffer[SD_interval / current_interval];
+    unsigned int time_buffer[SD_INTERVAL];
+    float voltage_buffer[SD_INTERVAL / VOLT_INTERVAL][NUM_BOARDS][NUM_CELLS];
+    float temp_buffer[SD_INTERVAL / TEMP_INTERVAL][NUM_BOARDS][10];
+    float current_buffer[SD_INTERVAL / CURRENT_INTERVAL];
     float currentbuffer_stat;
 
     unsigned int start_time = millis();
@@ -44,7 +44,6 @@ typedef struct Ev4 {
     bool comms_fault;
     bool curr_sense_fault;
     bool watchdog_callback;
-    bool watchdog_reset;
     bool charger_fault;
 
     // RMS calc values
@@ -53,12 +52,12 @@ typedef struct Ev4 {
     int RMS_Current;
 
     // sense board flags
-    float GPIO_open_wire[num_boards][10];
+    float GPIO_open_wire[NUM_BOARDS][10];
     bool overvoltage_flag[18];
     bool undervoltage_flag[18];
 
     // Ev4 configuration (modifiable attributes)
-    Config_t cfg;
-} Ev4_t;
+    config_t cfg;
+} ev4_t;
 
 #endif

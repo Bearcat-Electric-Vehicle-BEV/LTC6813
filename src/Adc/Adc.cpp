@@ -1,6 +1,6 @@
 #include "Adc.h"
 
-void Adc_Init(Ev4_t *ctx) {
+void adc_init(ev4_t *ctx) {
     // ADC sampling time constant (without external filter) = 50 ohms * 40 pF
     // CFR.B6 = 0 : uses external voltage reference
     // CFR.B9 = 0, FSR_ADC_A = 0 to VREF_A and FSR_ADC_B = 0 to VREF_B
@@ -45,14 +45,14 @@ void Adc_Init(Ev4_t *ctx) {
     if ((uint8_t)(CFR_reg_MSB << 4) != (uint8_t)(CFR_readback_MSB << 4) ||
         (uint8_t)(CFR_reg_LSB << 4) != (uint8_t)(CFR_readback_LSB << 4))
     { // bit-shifts to mask the 4 MSBs
-        Serial.println("ADC_initialization ERROR");
+        Serial.println("adc_initialization ERROR");
         Serial.println((CFR_reg_MSB << 4), BIN);
         Serial.println((CFR_reg_LSB << 4), BIN);
         ctx->curr_sense_fault = 1;
     }
 }
 
-void Adc_Read() {
+void adc_read() {
     uint16_t ADC_A;
     uint16_t ADC_B;
     float A_volt;
@@ -89,7 +89,7 @@ void Adc_Read() {
     println_with_args("B Voltage: %f", B_volt);
 }
 
-void Adc_Poll(Ev4_t *ctx, uint16_t command) {
+void adc_poll(ev4_t *ctx, uint16_t command) {
     uint8_t return_data = 0;
     send_command(ctx, command);
 

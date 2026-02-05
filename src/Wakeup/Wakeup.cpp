@@ -1,6 +1,6 @@
 #include "Wakeup.h"
 
-void Wakeup_Sleep(uint8_t total_ic) {
+void wakeup_sleep(uint8_t total_ic) {
     // Number of ICs in the system. This function  needs some work. Enters
     // Sleep state after 2 seconds of no command sent with valid PEC
     Serial.println("Wakeup Sleep");
@@ -14,7 +14,7 @@ void Wakeup_Sleep(uint8_t total_ic) {
     }
 }
 
-void Wakeup_Idle(uint8_t total_ic) {
+void wakeup_idle(uint8_t total_ic) {
     // Serial.println("wakeup_idle");
     for (int i = 0; i < total_ic + 1; i++) { // +1 IC for the LTC6820
         digitalWrite(CS, LOW);

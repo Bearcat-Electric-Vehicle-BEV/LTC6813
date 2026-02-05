@@ -4,11 +4,11 @@
 #include <FS.h>
 #include <SD.h>
 #include "../Ev4/Ev4.h"
-#include "../CONFIGURE.h"
+#include "../System/System.h"
 
 // SD card pins
-const int chipSelect = BUILTIN_SDCARD;
+const int CHIP_SELECT = BUILTIN_SDCARD;
 
-void Sd_DataWrite(Ev4_t *ctx);
+void sd_data_write(ev4_t *ctx);
 
 #endif

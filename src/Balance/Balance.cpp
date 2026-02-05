@@ -1,13 +1,13 @@
 #include "Balance.h"
 
-void discharge_cells(Ev4_t *ctx, bool discharge[num_boards][18]) {
+void discharge_cells(ev4_t *ctx, bool discharge[NUM_BOARDS][18]) {
     uint8_t data[6];
-    uint8_t data_arr[num_boards][6];
+    uint8_t data_arr[NUM_BOARDS][6];
     uint16_t VUV = (UV - 1.5f) / (16 * 0.00015f); // Cell undervoltage threshold = VUV * 16 * 150μV + 1.5V
     uint16_t VOV = (OV - 1.5f) / (16 * 0.00015f); // Cell overvoltage threshold = VOV * 16 * 150μV + 1.5V
 
     // Configuration register group B
-    for (int i = 0; i < num_boards; i++) {
+    for (int i = 0; i < NUM_BOARDS; i++) {
         data[0] = (uint8_t)VUV;
         data[1] = ((uint8_t)VOV << 4) | (VUV >> 8 & 0b00001111);
         data[2] = (uint8_t)(VOV >> 4);
@@ -25,8 +25,8 @@ void discharge_cells(Ev4_t *ctx, bool discharge[num_boards][18]) {
     write_register_group(ctx, WRCFGB, data_arr);
 }
 
-void balance_cells(Ev4_t *ctx, bool set) {
-    bool discharge[num_boards][18] = {0}; // '1': needs dischaged, '0': does not need discharged
+void balance_cells(ev4_t *ctx, bool set) {
+    bool discharge[NUM_BOARDS][18] = {0}; // '1': needs dischaged, '0': does not need discharged
 
     if (!set) {
         discharge_cells(ctx, discharge);
@@ -37,12 +37,12 @@ void balance_cells(Ev4_t *ctx, bool set) {
     float max = ctx->cell_voltage[0][0];
 
     measure_die_temp(ctx);
-    min_max<num_boards, num_cells>(ctx->cell_voltage, min, max); // Mark cells to be discharged
+    min_max<NUM_BOARDS, NUM_CELLS>(ctx->cell_voltage, min, max); // Mark cells to be discharged
     println_with_args("Min cell voltage: %f", min);
     println_with_args("Max cell voltage: %f", max);
 
-    for (int i = 0; i < num_boards; i++) {
-        for (int j = 0; j < num_cells; j++) {
+    for (int i = 0; i < NUM_BOARDS; i++) {
+        for (int j = 0; j < NUM_CELLS; j++) {
             discharge[i][j] = ctx->cell_voltage[i][j] > min &&
                                 ctx->cell_voltage[i][j] > ctx->cfg.balance_threshold &&
                                 ctx->die_temps[i] < 58.0f;

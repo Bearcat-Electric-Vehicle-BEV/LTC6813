@@ -6,6 +6,6 @@
 #include "../Ev4/Ev4.h"
 #include "../Measurement/Measurement.h"
 
-void Standby_State(Ev4_t *ctx);
+void standby_state(ev4_t *ctx);
 
 #endif

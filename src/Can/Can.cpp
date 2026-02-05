@@ -1,6 +1,6 @@
 #include "Can.h"
 
-void Can_Init(Ev4_t* ctx) {
+void can_init(ev4_t* ctx) {
     pinMode(CRX3, INPUT);
     pinMode(CTX3, OUTPUT);
     pinMode(STBY, OUTPUT);
@@ -18,7 +18,7 @@ void Can_Init(Ev4_t* ctx) {
     ctx->can.setMBFilter(MB2, 0x1806E5F4);       // Mailbox for Charger CAN Messages
 }
 
-CAN_message_t Can_Rx(Ev4_t *ctx) {
+CAN_message_t can_rx(ev4_t *ctx) {
     // left bit in charger flag is highest bit (bit 4)
     CAN_message_t msg = {};
     digitalWrite(STBY, LOW);
@@ -39,15 +39,15 @@ CAN_message_t Can_Rx(Ev4_t *ctx) {
     return msg; // always check the ID of the returned message. No messages in buffer returns 0 ID with 8 byte of zero data
 }
 
-void Can_Tx(Ev4_t *ctx) {
+void can_tx(ev4_t *ctx) {
     measure_voltage(ctx);
     measure_temp(ctx);
     float min_cell_voltage = ctx->cell_voltage[0][0];
     float max_cell_voltage = ctx->cell_voltage[0][0];
     float min_cell_temp = ctx->cell_temp[0][0];
     float max_cell_temp = ctx->cell_temp[0][0];
-    min_max<num_boards, num_cells>(ctx->cell_voltage, min_cell_voltage, max_cell_voltage);
-    min_max<num_boards, 10>(ctx->cell_temp, min_cell_temp, max_cell_temp);
+    min_max<NUM_BOARDS, NUM_CELLS>(ctx->cell_voltage, min_cell_voltage, max_cell_voltage);
+    min_max<NUM_BOARDS, 10>(ctx->cell_temp, min_cell_temp, max_cell_temp);
     uint8_t inst_power_limit = power_limit(max_cell_temp);
     println_with_args("Power Limit: %u", inst_power_limit);
 

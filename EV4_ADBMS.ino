@@ -5,15 +5,12 @@
 #include <cmath>
 #include <string>
 
-#include "src/COMMANDS.h"
-#include "src/CONFIGURE.h"
-#include "src/LUTS.h"
+#include "src/System/System.h"
 #include "src/Utils/Utils.h"
 
 #include "src/Can/Can.h"
 #include "src/Watchdog/Watchdog.h"
 #include "src/Adc/Adc.h"
-#include "src/Ev4/Ev4.h"
 #include "src/Charge/Charge.h"
 #include "src/Measurement/Measurement.h"
 #include "src/Pec/Pec.h"
@@ -27,7 +24,7 @@
 
 
 // Holds all globals in the context of EV4
-static Ev4_t ctx{};
+static ev4_t ctx{};
 
 void setup() {
     // Open shutdown circuit
@@ -43,13 +40,13 @@ void setup() {
     println_with_args("Startup/n/tStart Time: %u", ctx.start_time);
 
     // Initialize communications
-    Spi_Init(CS, SPI_MODE0); // SPI (isoSPI)
-    Spi_Init(CS1, SPI_MODE1); // SPI1 (ADC)
-    Can_Init(&ctx);
+    spi_init(CS, SPI_MODE0); // SPI (isoSPI)
+    spi_init(CS1, SPI_MODE1); // SPI1 (ADC)
+    can_init(&ctx);
 
     // Initialize watchdog and ADC
-    Watchdog_Init(&ctx);
-    Adc_Init(&ctx);
+    watchdog_init(&ctx);
+    adc_init(&ctx);
 
     // Current offset compensation
     measure_current(&ctx);
@@ -66,7 +63,7 @@ void setup() {
     if (ctx.mode == Mode::Init) {
         measure_voltage(&ctx);
         measure_current(&ctx);
-        Soc_Update(&ctx);
+        soc_update(&ctx);
 
         CAN_message_t msg;
         bool CAN_baud_alt = true;
@@ -77,10 +74,10 @@ void setup() {
             measure_voltage(&ctx);
             measure_temp(&ctx);
 
-            Can_Tx(&ctx); // wrong baud rate every other message
+            can_tx(&ctx); // wrong baud rate every other message
             print_min_max(&ctx);
-            Watchdog_Reset(&ctx);
-            msg = Can_Rx(&ctx);
+            watchdog_reset(&ctx);
+            msg = can_rx(&ctx);
 
             // Alternate CAN baud rate (250000 for charger, 500000 for vehicle)
             if (CAN_baud_alt) {
@@ -91,7 +88,7 @@ void setup() {
                 CAN_baud_alt = true;
             }
 
-            if (determineMode(&ctx, msg, CAN_baud_alt)) 
+            if (determine_mode(&ctx, msg, CAN_baud_alt)) 
                 break;
 
             delay(20);
@@ -103,9 +100,6 @@ void loop() {
     switch (ctx.mode) {
     case Mode::Charge: {
         Serial.println("Charge Mode Entered");
-        CAN_message_t msg;
-        float charger_voltage = 0;
-        float charger_current = 0;
 
         String filename = "data" + String(ctx.data_file_num) + ".csv"; // create data file
         File file = SD.open(filename.c_str(), FILE_WRITE);
@@ -115,7 +109,7 @@ void loop() {
                      // ensuring the charger fully powers down would otherwise can
                      // cause the BMS to enter the charge cycle agian.
 
-        Charge_Precharge(&ctx, msg, charger_voltage, charger_current);
+        charge_precharge(&ctx);
 
         balance_cells(&ctx, ON);
         
@@ -125,7 +119,7 @@ void loop() {
                         // indicate a charger error)
 
         uint32_t charge_start_time = millis();
-        Charge_State(&ctx, msg, charger_voltage, charger_current, charge_start_time);
+        charge_state(&ctx, charge_start_time);
 
         // Charger fault
         while (1) {
@@ -142,19 +136,19 @@ void loop() {
             String filename = "data" + String(ctx.data_file_num) + ".csv"; // create data file
             File file = SD.open(filename.c_str(), FILE_WRITE);
             file.close();
-            Sd_DataWrite(&ctx); // write initial conditions to data file once
+            sd_data_write(&ctx); // write initial conditions to data file once
         }
 
-        Standby_State(&ctx);
+        standby_state(&ctx);
     }
 
     case Mode::Drive: {
         Serial.println("Drive Mode Entered");
         balance_cells(&ctx, OFF);
 
-        int time_step = 0; // time step number
+        int t = 0; // time step number
         CAN_message_t msg;
-        Drive_State(&ctx, time_step, msg);
+        drive_state(&ctx, t, msg);
     }
 
     case Mode::Balance: {
