@@ -1,6 +1,6 @@
 #include "Charge.h"
 
-const uint16_t CHG_current_from_soc(ev4_t *ctx) {
+const uint16_t charger_current_from_soc(ev4_t *ctx) {
     const float soc = soc_get(ctx);
     if (soc < 80)
         return CHG_CURRENT1;
@@ -11,8 +11,8 @@ const uint16_t CHG_current_from_soc(ev4_t *ctx) {
 }
 
 void configure_charger(ev4_t *ctx, bool enable, uint16_t charger_current) {
-    uint16_t CHG_current = CHG_current_from_soc(ctx);
-    if (CHG_current == charger_current)
+    uint16_t chg_current = charger_current_from_soc(ctx);
+    if (chg_current == charger_current)
         return;
 
     digitalWrite(STBY, LOW);
@@ -26,7 +26,7 @@ void configure_charger(ev4_t *ctx, bool enable, uint16_t charger_current) {
     // 7FF max CAN ID
 
     uint16_t voltage_int = (uint16_t)(CHG_VOLTAGE * 10);
-    uint16_t current_int = (uint16_t)(CHG_current * 10);
+    uint16_t current_int = (uint16_t)(chg_current * 10);
 
     CHGR_EN.buf[0] = (uint8_t)(voltage_int >> 8); // High byte
     CHGR_EN.buf[1] = (uint8_t)(voltage_int);      // Low byte
