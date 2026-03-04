@@ -82,7 +82,7 @@ void measure_temp(ev4_t *ctx, bool open_wire_check) {
     //     for (int j = 0; j < 10; j++)
     //         cell_temp[i][j] = map_voltage_to_temp(cell_temp[i][j]);
 
-    // new_temp = true;
+    ctx->new_temp = true;       //Uncommented 3/3/26 - seems like it needs to be here.
 
     if (ctx->cfg.debug) {
         Serial.println("Temperatures:");
